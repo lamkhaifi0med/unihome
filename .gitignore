@@ -59,3 +59,5 @@ build/
 
 ### Local config with secrets ###
 src/main/resources/application.properties
+demo/
+mds/
