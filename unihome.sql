@@ -516,6 +516,23 @@ CREATE TABLE public.utilisateurs (
 
 
 --
+-- TOC entry 999 (class 1259 OID 99999)
+-- Name: confirmation_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.confirmation_tokens (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    utilisateur_id uuid NOT NULL,
+    token character varying(255) NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    CONSTRAINT confirmation_tokens_pkey PRIMARY KEY (id),
+    CONSTRAINT confirmation_tokens_token_key UNIQUE (token),
+    CONSTRAINT confirmation_tokens_utilisateur_fk FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+
+
+--
 -- TOC entry 236 (class 1259 OID 18015)
 -- Name: v_annonces_avec_distance; Type: VIEW; Schema: public; Owner: -
 --
