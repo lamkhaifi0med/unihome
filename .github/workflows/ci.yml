@@ -40,5 +40,5 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: password1234
           SPRING_JPA_HIBERNATE_DDL_AUTO: none
           JWT_SECRET: c2VjdXJlLWtleS1mb3ItdW5paG9tZS0zMi1ieXRlcy0xMjM0NTY3ODkw
+          PYTHON_SERVICE_URL: http://localhost:8000
         run: mvn -q -Dtest=UnihomeApiApplicationTests test
-
