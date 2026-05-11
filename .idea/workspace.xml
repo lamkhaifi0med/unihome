@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7faf9593-28b9-42f9-9bc1-5c888bda4320" name="Changes" comment="" />
+    <list default="true" id="7faf9593-28b9-42f9-9bc1-5c888bda4320" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/com/unihome/api/UnihomeApiApplicationTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/com/unihome/api/UnihomeApiApplicationTests.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -29,7 +31,7 @@
             <option name="modeId" value="Agent" />
             <option name="modelType" value="builtin_family" />
             <option name="modelValue" value="gpt-5.2-codex" />
-            <option name="status" value="WaitingForResponse" />
+            <option name="status" value="Completed" />
             <option name="targetType" value="LOCAL" />
           </session>
           <session>
