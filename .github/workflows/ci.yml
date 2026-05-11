@@ -34,6 +34,7 @@ jobs:
           java-version: "17"
 
       - name: Run tests
+        working-directory: backend
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/unihome
           SPRING_DATASOURCE_USERNAME: postgres
@@ -42,3 +43,4 @@ jobs:
           JWT_SECRET: c2VjdXJlLWtleS1mb3ItdW5paG9tZS0zMi1ieXRlcy0xMjM0NTY3ODkw
           PYTHON_SERVICE_URL: http://localhost:8000
         run: mvn -q -Dtest=UnihomeApiApplicationTests test
+
