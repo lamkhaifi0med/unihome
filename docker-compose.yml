@@ -1,0 +1,39 @@
+version: "3.9"
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: unihome-db
+    environment:
+      POSTGRES_DB: unihome
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./unihome.sql:/docker-entrypoint-initdb.d/unihome.sql
+
+  api:
+    build: .
+    container_name: unihome-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/unihome
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      PYTHON_SERVICE_URL: http://host.docker.internal:8000
+      # SMTP / Cloudinary (optionnel)
+      # SPRING_MAIL_HOST: smtp.gmail.com
+      # SPRING_MAIL_USERNAME: your-email@example.com
+      # SPRING_MAIL_PASSWORD: your-app-password
+      # CLOUDINARY_CLOUD_NAME: your-cloud-name
+      # CLOUDINARY_API_KEY: your-api-key
+      # CLOUDINARY_API_SECRET: your-api-secret
+
+volumes:
+  db_data:
+

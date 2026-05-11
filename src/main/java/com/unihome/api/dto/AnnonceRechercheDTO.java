@@ -33,5 +33,5 @@ public class AnnonceRechercheDTO {
     private String proprietairePrenom;
     private Boolean proprietaireVerifie;
     private BigDecimal proprietaireNote;
+    private Double distanceMetres;
 }
-

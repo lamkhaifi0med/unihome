@@ -11,7 +11,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "avis")
+@Table(
+    name = "avis",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uq_avis_etudiant_annonce",
+        columnNames = {"etudiant_id", "annonce_id"}
+    )
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -51,4 +57,3 @@ public class Avis {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 }
-

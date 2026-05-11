@@ -55,6 +55,9 @@ public class Annonce {
     @Column(name = "detail_score", columnDefinition = "jsonb")
     private Map<String, Integer> detailScore;
 
+    @Column(name = "raison_statut", columnDefinition = "TEXT")
+    private String raisonStatut;
+
     @Column(name = "nb_signalements", nullable = false)
     private Integer nbSignalements;
 
@@ -70,5 +73,3 @@ public class Annonce {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 }
-
-

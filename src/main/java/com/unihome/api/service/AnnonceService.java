@@ -1,28 +1,33 @@
 package com.unihome.api.service;
 
+import com.unihome.api.dto.AnnonceAiRequest;
 import com.unihome.api.dto.AnnonceRequestDTO;
 import com.unihome.api.dto.AnnonceRechercheDTO;
 import com.unihome.api.dto.FraudScoreResponse;
+import com.unihome.api.dto.AnnonceResponseDTO;
 import com.unihome.api.entity.Annonce;
+import com.unihome.api.entity.AnnonceAvecDistance;
 import com.unihome.api.entity.ContactAnnonce;
 import com.unihome.api.entity.Logement;
+import com.unihome.api.entity.Photo;
 import com.unihome.api.entity.Proprietaire;
 import com.unihome.api.entity.StatutAnnonceEnum;
 import com.unihome.api.repository.AnnonceRepository;
+import com.unihome.api.repository.AnnonceAvecDistanceRepository;
 import com.unihome.api.repository.LogementRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,7 +40,8 @@ public class AnnonceService {
     private final LogementRepository logementRepository;
     private final ContactAnnonceService contactAnnonceService;
     private final PhotoService photoService;
-    private final WebClient webClient;
+    private final AnnonceAiClient annonceAiClient;
+    private final AnnonceAvecDistanceRepository annonceAvecDistanceRepository;
 
     @Transactional
     public Annonce creerAnnonce(UUID logementId, Annonce annonceData) {
@@ -57,11 +63,45 @@ public class AnnonceService {
                 .collect(Collectors.toList());
 
         contactAnnonceService.ajouterContacts(savedAnnonce, contacts);
-        for (MultipartFile photoFile : requestDTO.getPhotos()) {
-            photoService.uploaderPhoto(photoFile, savedAnnonce);
+        int incomingCount = requestDTO.getPhotos() != null ? requestDTO.getPhotos().size() : 0;
+        photoService.validatePhotoCount(savedAnnonce, incomingCount);
+        List<String> photoUrls = new ArrayList<>();
+        if (requestDTO.getPhotos() != null) {
+            for (MultipartFile photoFile : requestDTO.getPhotos()) {
+                Photo photo = photoService.uploaderPhoto(photoFile, savedAnnonce);
+                photoUrls.add(photo.getUrl());
+            }
         }
 
-        return savedAnnonce;
+        Logement logement = savedAnnonce.getLogement();
+        String proprietaireNomComplet = null;
+        if (logement != null && logement.getProprietaire() != null) {
+            String prenom = logement.getProprietaire().getPrenom();
+            String nom = logement.getProprietaire().getNom();
+            proprietaireNomComplet = String.format("%s %s", prenom != null ? prenom : "", nom != null ? nom : "").trim();
+        }
+
+        AnnonceAiRequest aiRequest = new AnnonceAiRequest(
+                savedAnnonce.getTitre(),
+                savedAnnonce.getDescription(),
+                savedAnnonce.getLoyer(),
+                photoUrls,
+                logement != null ? logement.getJustificatifUrl() : null,
+                proprietaireNomComplet
+        );
+
+        FraudScoreResponse fraudResponse = annonceAiClient.analyserAnnonce(aiRequest);
+        if (fraudResponse == null) {
+            savedAnnonce.setStatut(StatutAnnonceEnum.EN_ATTENTE);
+            savedAnnonce.setScoreConfiance((short) 0);
+            savedAnnonce.setDetailScore(new HashMap<>());
+            savedAnnonce.setRaisonStatut("IA indisponible - Validation manuelle requise");
+            return annonceRepository.save(savedAnnonce);
+        }
+
+        appliquerDecisionFraude(savedAnnonce, fraudResponse);
+
+        return annonceRepository.save(savedAnnonce);
     }
 
     private Annonce creerAnnonceInterne(UUID logementId, Annonce annonceData, List<?> photos) {
@@ -73,34 +113,37 @@ public class AnnonceService {
         annonceData.setLogement(logement);
         annonceData.setDatePublication(LocalDateTime.now());
         annonceData.setNbSignalements(0);
+        annonceData.setStatut(StatutAnnonceEnum.EN_ATTENTE);
+        annonceData.setScoreConfiance((short) 0);
+        annonceData.setDetailScore(new HashMap<>());
 
-        FraudScoreResponse fraudResponse;
-        try {
-            fraudResponse = callFraudDetectionService(annonceData);
-        } catch (Exception exception) {
-            log.error("Fraud service call failed for logementId={}: {}", logementId, exception.getMessage(), exception);
-            fraudResponse = null;
-        }
+        return annonceRepository.save(annonceData);
+    }
 
+    private void appliquerDecisionFraude(Annonce annonceData, FraudScoreResponse fraudResponse) {
         Short scoreGlobal = fraudResponse != null ? fraudResponse.getScoreGlobal() : null;
         if (scoreGlobal == null) {
-            log.warn("Fraud score missing or service unavailable. Applying fallback EN_ATTENTE with score 0 for logementId={}", logementId);
+            log.warn("IA indisponible. Annonce en EN_ATTENTE avec score 0.");
             annonceData.setStatut(StatutAnnonceEnum.EN_ATTENTE);
             annonceData.setScoreConfiance((short) 0);
             annonceData.setDetailScore(new HashMap<>());
-        } else {
-            if (scoreGlobal >= 70) {
-                annonceData.setStatut(StatutAnnonceEnum.VALIDEE);
-            } else if (scoreGlobal >= 40) {
-                annonceData.setStatut(StatutAnnonceEnum.EN_ATTENTE);
-            } else {
-                annonceData.setStatut(StatutAnnonceEnum.REJETEE);
-            }
-            annonceData.setScoreConfiance(scoreGlobal);
-            annonceData.setDetailScore(fraudResponse.getDetailScore());
+            annonceData.setRaisonStatut("IA indisponible - Validation manuelle requise");
+            return;
         }
 
-        return annonceRepository.save(annonceData);
+        if (scoreGlobal > 70) {
+            annonceData.setStatut(StatutAnnonceEnum.VALIDEE);
+            annonceData.setRaisonStatut("Validé par IA - Score: " + scoreGlobal);
+        } else if (scoreGlobal >= 40) {
+            annonceData.setStatut(StatutAnnonceEnum.EN_ATTENTE);
+            annonceData.setRaisonStatut("En attente par IA - Score: " + scoreGlobal);
+        } else {
+            annonceData.setStatut(StatutAnnonceEnum.REJETEE);
+            annonceData.setRaisonStatut("Rejeté par IA - Score: " + scoreGlobal);
+        }
+
+        annonceData.setScoreConfiance(scoreGlobal);
+        annonceData.setDetailScore(fraudResponse.getDetailScore() != null ? fraudResponse.getDetailScore() : new HashMap<>());
     }
 
     private Annonce mapToAnnonceEntity(AnnonceRequestDTO requestDTO) {
@@ -112,23 +155,6 @@ public class AnnonceService {
         return annonce;
     }
 
-    private FraudScoreResponse callFraudDetectionService(Annonce annonce) {
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("titre", annonce.getTitre());
-        requestBody.put("description", annonce.getDescription());
-        requestBody.put("loyer", annonce.getLoyer());
-
-        return webClient.post()
-                .uri("/analyze-listing")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(FraudScoreResponse.class)
-                .onErrorResume(exception -> {
-                    log.error("Python fraud service unreachable or returned an error: {}", exception.getMessage(), exception);
-                    return Mono.empty();
-                })
-                .block();
-    }
 
     private void validatePhotoCount(List<?> photos) {
         if (photos == null) {
@@ -146,6 +172,13 @@ public class AnnonceService {
         return annonceRepository.findActiveAnnonces().stream()
                 .map(this::toRechercheDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AnnonceRechercheDTO> rechercherAnnoncesProches(UUID universiteId, Double rayonMetres, Pageable pageable) {
+        return annonceAvecDistanceRepository
+                .findByUniversiteWithinDistance(universiteId, rayonMetres, pageable)
+                .map(this::toRechercheDTO);
     }
 
     public AnnonceRechercheDTO buildRechercheDTO(Annonce annonce) {
@@ -172,7 +205,30 @@ public class AnnonceService {
                 proprietaire != null ? proprietaire.getNom() : null,
                 proprietaire != null ? proprietaire.getPrenom() : null,
                 proprietaire != null ? proprietaire.getEstVerifieCin() : null,
-                proprietaire != null ? proprietaire.getNoteMoyenne() : null
+                proprietaire != null ? proprietaire.getNoteMoyenne() : null,
+                null
+        );
+    }
+
+    private AnnonceRechercheDTO toRechercheDTO(AnnonceAvecDistance annonce) {
+        return new AnnonceRechercheDTO(
+                annonce.getAnnonceId(),
+                annonce.getTitre(),
+                annonce.getLoyer(),
+                annonce.getStatut(),
+                annonce.getScoreConfiance(),
+                null,
+                annonce.getDateExpiration(),
+                annonce.getLogementId(),
+                annonce.getAdresse(),
+                annonce.getVille(),
+                annonce.getSuperficie(),
+                annonce.getTypeLogement(),
+                annonce.getProprietaireNom(),
+                annonce.getProprietairePrenom(),
+                annonce.getProprietaireVerifie(),
+                annonce.getProprietaireNote(),
+                annonce.getDistanceCampusM()
         );
     }
 
@@ -182,5 +238,34 @@ public class AnnonceService {
 
         annonce.setStatut(StatutAnnonceEnum.ARCHIVEE);
         annonceRepository.save(annonce);
+    }
+
+    public AnnonceResponseDTO buildResponseDTO(Annonce annonce) {
+        return toResponseDTO(annonce);
+    }
+
+    private AnnonceResponseDTO toResponseDTO(Annonce annonce) {
+        Logement logement = annonce.getLogement();
+        Proprietaire proprietaire = logement != null ? logement.getProprietaire() : null;
+
+        return new AnnonceResponseDTO(
+                annonce.getId(),
+                annonce.getTitre(),
+                annonce.getLoyer(),
+                annonce.getStatut(),
+                annonce.getScoreConfiance(),
+                annonce.getRaisonStatut(),
+                annonce.getDatePublication(),
+                annonce.getDateExpiration(),
+                logement != null ? logement.getId() : null,
+                logement != null ? logement.getAdresse() : null,
+                logement != null ? logement.getVille() : null,
+                logement != null ? logement.getSuperficie() : null,
+                logement != null ? logement.getTypeLogement() : null,
+                proprietaire != null ? proprietaire.getNom() : null,
+                proprietaire != null ? proprietaire.getPrenom() : null,
+                proprietaire != null ? proprietaire.getEstVerifieCin() : null,
+                proprietaire != null ? proprietaire.getNoteMoyenne() : null
+        );
     }
 }

@@ -53,6 +53,12 @@ public class Logement {
     @Column(name = "coordonnees", columnDefinition = "geography(POINT,4326)", nullable = false)
     private Point coordonnees;
 
+    @Column(name = "justificatif_url", columnDefinition = "TEXT")
+    private String justificatifUrl;
+
+    @Column(name = "adresse_confirmee", nullable = false)
+    private Boolean adresseConfirmee;
+
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 

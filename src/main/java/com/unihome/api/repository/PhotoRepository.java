@@ -8,5 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface PhotoRepository extends JpaRepository<Photo, UUID> {
+    long countByAnnonce_Id(UUID annonceId);
 }
-

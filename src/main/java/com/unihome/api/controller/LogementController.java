@@ -8,11 +8,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/logements")
@@ -21,9 +23,11 @@ public class LogementController {
 
     private final LogementService logementService;
 
-    @PostMapping
-    public ResponseEntity<LogementResponseDTO> creerLogement(@RequestBody @Valid LogementRequestDTO dto) {
-        Logement logement = logementService.creerLogement(dto);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<LogementResponseDTO> creerLogement(
+            @RequestPart("logement") @Valid LogementRequestDTO dto,
+            @RequestPart(value = "justificatifFile", required = false) MultipartFile justificatifFile) {
+        Logement logement = logementService.creerLogement(dto, justificatifFile);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDTO(logement));
     }
 

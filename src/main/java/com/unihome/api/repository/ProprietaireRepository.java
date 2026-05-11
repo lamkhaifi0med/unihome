@@ -8,5 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface ProprietaireRepository extends JpaRepository<Proprietaire, UUID> {
+    boolean existsByNumeroCin(String numeroCin);
 }
-

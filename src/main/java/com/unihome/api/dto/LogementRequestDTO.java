@@ -43,5 +43,8 @@ public class LogementRequestDTO {
     @Min(-180)
     @Max(180)
     private double longitude;
-}
 
+    private String justificatifUrl;
+
+    private Boolean adresseConfirmee;
+}

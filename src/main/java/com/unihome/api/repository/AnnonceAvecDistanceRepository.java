@@ -1,6 +1,8 @@
 package com.unihome.api.repository;
 
 import com.unihome.api.entity.AnnonceAvecDistance;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,5 +43,22 @@ public interface AnnonceAvecDistanceRepository extends JpaRepository<AnnonceAvec
      * Find all active listings in a city
      */
     List<AnnonceAvecDistance> findByVille(String ville);
-}
 
+    /**
+     * Find all active listings within a distance radius from a given point with pagination
+     * @param universiteId University ID to calculate distance from
+     * @param maxDistanceM Maximum distance in meters
+     * @param pageable Pagination information
+     */
+    @Query("""
+        SELECT a FROM AnnonceAvecDistance a
+        WHERE a.universiteId = :universiteId
+        AND a.statut = com.unihome.api.entity.StatutAnnonceEnum.VALIDEE
+        AND CAST(a.distanceCampusM AS double) <= :maxDistanceM
+    """)
+    Page<AnnonceAvecDistance> findByUniversiteWithinDistance(
+        @Param("universiteId") UUID universiteId,
+        @Param("maxDistanceM") Double maxDistanceM,
+        Pageable pageable
+    );
+}

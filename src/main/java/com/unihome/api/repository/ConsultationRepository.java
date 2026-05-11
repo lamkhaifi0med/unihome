@@ -8,5 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface ConsultationRepository extends JpaRepository<Consultation, UUID> {
+    boolean existsByEtudiant_IdAndAnnonce_IdAndContactsAffichesTrue(UUID etudiantId, UUID annonceId);
 }
-

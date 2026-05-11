@@ -14,6 +14,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +22,9 @@ public class LogementService {
 
     private final LogementRepository logementRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final PhotoService photoService;
 
-    public Logement creerLogement(LogementRequestDTO dto) {
+    public Logement creerLogement(LogementRequestDTO dto, MultipartFile justificatifFile) {
         Utilisateur proprietaire = utilisateurRepository.findById(dto.getProprietaireId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Utilisateur not found with id: " + dto.getProprietaireId()));
@@ -42,6 +44,14 @@ public class LogementService {
         logement.setTypeLogement(dto.getTypeLogement());
         logement.setStatutLogement(StatutLogementEnum.DISPONIBLE);
         logement.setCoordonnees(point);
+        String justificatifUrl = null;
+        if (justificatifFile != null && !justificatifFile.isEmpty()) {
+            justificatifUrl = photoService.uploaderJustificatif(justificatifFile);
+        } else {
+            justificatifUrl = dto.getJustificatifUrl();
+        }
+        logement.setJustificatifUrl(justificatifUrl);
+        logement.setAdresseConfirmee(Boolean.FALSE);
 
         return logementRepository.save(logement);
     }
