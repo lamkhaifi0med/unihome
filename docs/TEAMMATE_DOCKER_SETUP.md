@@ -37,7 +37,9 @@ Copy-Item .env.example .env
 
 Then open `.env` and adjust values if needed.
 
-Minimum required for the app to start:
+They only need the root `.env` file. They do not need to create or edit `backend/src/main/resources/application.properties` when using Docker.
+
+Minimum values for the app to start:
 
 ```env
 POSTGRES_DB=unihome
@@ -54,11 +56,39 @@ GEMINI_MODEL_NAME=gemini-flash-latest
 AI_SERVICE_PORT=8000
 ```
 
+What each value means:
+
+| Variable                | Required to start? | Needed for full feature?         | What to put                                                                                        |
+| ----------------------- | ------------------ | -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `POSTGRES_DB`           | Yes                | Yes                              | Keep `unihome` unless you know why to change it.                                                   |
+| `POSTGRES_USER`         | Yes                | Yes                              | Keep `postgres` for local Docker.                                                                  |
+| `POSTGRES_PASSWORD`     | Yes                | Yes                              | Keep `password1234` for local Docker or choose another password.                                   |
+| `DB_PORT`               | Yes                | Yes                              | Keep `5432`; change to `5433` if PostgreSQL already uses `5432`.                                   |
+| `JWT_SECRET`            | Yes                | Yes                              | For local Docker, the example value works. For real deployment, generate a new long base64 secret. |
+| `JWT_EXPIRATION_MS`     | Yes                | Yes                              | Keep `3600000` for 1 hour tokens.                                                                  |
+| `BACKEND_PORT`          | Yes                | Yes                              | Keep `8095`; change only if the port is busy.                                                      |
+| `FRONTEND_PORT`         | Yes                | Yes                              | Keep `5173`; change only if the port is busy.                                                      |
+| `VITE_API_URL`          | Yes                | Yes                              | Must match `BACKEND_PORT`, for example `http://localhost:8095`.                                    |
+| `GEMINI_API_KEY`        | No                 | Yes, for AI scoring              | Put a real Google Gemini API key. Placeholder lets the stack start, but AI analysis will fail.     |
+| `GEMINI_MODEL_NAME`     | Yes                | Yes                              | Keep `gemini-flash-latest`.                                                                        |
+| `AI_SERVICE_PORT`       | Yes                | Yes                              | Keep `8000`; change only if the port is busy.                                                      |
+| `CLOUDINARY_CLOUD_NAME` | No                 | Yes, for owner CIN/photo uploads | Put Cloudinary cloud name.                                                                         |
+| `CLOUDINARY_API_KEY`    | No                 | Yes, for owner CIN/photo uploads | Put Cloudinary API key.                                                                            |
+| `CLOUDINARY_API_SECRET` | No                 | Yes, for owner CIN/photo uploads | Put Cloudinary API secret.                                                                         |
+| `SMTP_HOST`             | No                 | Optional, for real emails        | Keep `smtp.example.com` to disable email locally.                                                  |
+| `SMTP_PORT`             | No                 | Optional, for real emails        | Usually `587`.                                                                                     |
+| `SMTP_USERNAME`         | No                 | Optional, for real emails        | SMTP/email username.                                                                               |
+| `SMTP_PASSWORD`         | No                 | Optional, for real emails        | SMTP/app password.                                                                                 |
+| `MAIL_FROM`             | No                 | Optional, for real emails        | Sender email address.                                                                              |
+
 Notes:
 
 - The app can start with a placeholder `GEMINI_API_KEY`, but AI scoring will not work until a real Gemini key is provided.
 - Owner registration and listing photo upload require Cloudinary credentials.
 - Email sending is disabled by default with `SMTP_HOST=smtp.example.com`; local registration will show a confirmation link in the UI instead.
+- If they only want to browse, register as a student, login, and test normal pages, they can keep every placeholder except ports if there is a conflict.
+- If they want to test owner registration or publish listings with uploaded files, they must fill Cloudinary values.
+- If they want to test AI trust scoring, they must fill `GEMINI_API_KEY`.
 
 ## 4. Start everything
 
