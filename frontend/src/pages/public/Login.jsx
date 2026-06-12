@@ -16,10 +16,12 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [resendStatus, setResendStatus] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setResendStatus("");
 
     if (!email || !password) {
       setError("Veuillez remplir tous les champs.");
@@ -55,15 +57,40 @@ export default function Login() {
       }
     } catch (err) {
       console.error(err);
+      const serverMessage = err.response?.data?.message || "";
       if (err.response?.status === 401) {
         setError("Email ou mot de passe incorrect");
-      } else if (err.response?.data?.message?.includes("confirm")) {
+      } else if (serverMessage.toLowerCase().includes("confirm")) {
         setError("Votre email n'est pas confirmé.");
+      } else if (err.response?.status === 403) {
+        setError(
+          serverMessage ||
+            "Acces refuse. Verifiez que votre compte est confirme.",
+        );
       } else {
-        setError("Une erreur est survenue lors de la connexion.");
+        setError(
+          serverMessage || "Une erreur est survenue lors de la connexion.",
+        );
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      setResendStatus("Entrez votre email puis reessayez.");
+      return;
+    }
+
+    setResendStatus("");
+    try {
+      await authApi.resendConfirmation(email);
+      setResendStatus("Lien de confirmation renvoye si le compte existe.");
+    } catch (err) {
+      setResendStatus(
+        err.response?.data?.message || "Impossible de renvoyer le lien.",
+      );
     }
   };
 
@@ -126,10 +153,14 @@ export default function Login() {
                   {error.includes("confirm") && (
                     <button
                       type="button"
+                      onClick={handleResend}
                       className="text-primary-500 hover:text-primary-400 text-sm mt-1 transition-colors underline"
                     >
                       Renvoyer un lien
                     </button>
+                  )}
+                  {resendStatus && (
+                    <p className="text-white/50 text-xs mt-2">{resendStatus}</p>
                   )}
                 </div>
               )}

@@ -11,6 +11,7 @@ import {
   Shield,
 } from "lucide-react";
 import { authApi } from "../../api/authApi";
+import { API_BASE_URL } from "../../api/axios";
 import { useAuth } from "../../hooks/useAuth";
 import signupIllustration from "../../assets/auth/signup-amico.svg";
 
@@ -23,6 +24,7 @@ export default function Register() {
   const [searchParams] = useSearchParams();
   const [submitError, setSubmitError] = useState("");
   const [successEmail, setSuccessEmail] = useState("");
+  const [confirmationUrl, setConfirmationUrl] = useState("");
   const [resendStatus, setResendStatus] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -90,6 +92,7 @@ export default function Register() {
   const onSubmit = async (values) => {
     setSubmitError("");
     setResendStatus("");
+    setConfirmationUrl("");
 
     if (!values.role) {
       setSubmitError("Veuillez selectionner un role pour continuer.");
@@ -119,10 +122,17 @@ export default function Register() {
     };
 
     try {
+      let response;
       if (values.role === ROLE_PROPRIETAIRE) {
-        await authApi.registerOwner(payload, cinFile);
+        response = await authApi.registerOwner(payload, cinFile);
       } else {
-        await authApi.registerStudent(payload);
+        response = await authApi.registerStudent(payload);
+      }
+      const token = response?.data?.confirmationToken;
+      if (token) {
+        setConfirmationUrl(
+          `${API_BASE_URL}/api/auth/confirm?token=${encodeURIComponent(token)}`,
+        );
       }
       setSuccessEmail(values.email);
     } catch (error) {
@@ -188,6 +198,23 @@ export default function Register() {
                 >
                   Pas recu ? Renvoyer l'email
                 </button>
+                {confirmationUrl && (
+                  <div className="mt-5 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-left">
+                    <p className="text-amber-100 text-sm font-semibold">
+                      Mode local Docker : SMTP n'est pas configure.
+                    </p>
+                    <p className="text-white/60 text-xs mt-1">
+                      Cliquez ici pour confirmer ce compte pendant le
+                      developpement.
+                    </p>
+                    <a
+                      href={confirmationUrl}
+                      className="mt-3 inline-flex text-amber-200 hover:text-amber-100 text-sm font-semibold underline"
+                    >
+                      Confirmer mon compte localement
+                    </a>
+                  </div>
+                )}
                 {resendStatus && (
                   <p className="text-white/50 text-xs mt-3">{resendStatus}</p>
                 )}

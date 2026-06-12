@@ -60,6 +60,6 @@ spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
 # Lien de confirmation (utilise {token} comme placeholder)
-app.confirmation.base-url=${CONFIRMATION_BASE_URL:http://localhost:8080/api/auth/confirm?token={token}}
+app.confirmation.base-url=${CONFIRMATION_BASE_URL:http://localhost:8095/api/auth/confirm?token={token}}
 app.reset.base-url=${RESET_PASSWORD_BASE_URL:http://localhost:5173/reset-password?token={token}}
 app.mail.from=${MAIL_FROM:}
