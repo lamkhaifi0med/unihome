@@ -6,12 +6,20 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "signalements")
+@Table(
+    name = "signalements",
+    uniqueConstraints = @UniqueConstraint(
+        name = "uq_signalement_etudiant_annonce",
+        columnNames = {"etudiant_id", "annonce_id"}
+    )
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -46,7 +54,8 @@ public class Signalement {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "statut", nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "statut", nullable = false, columnDefinition = "statut_signalement_enum")
     private StatutSignalementEnum statut;
 
     @Column(name = "created_at", insertable = false, updatable = false)

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -18,6 +19,7 @@ public class AnnonceRechercheDTO {
     private UUID id;
     private String titre;
     private BigDecimal loyer;
+    private Boolean chargesIncluses;
     private StatutAnnonceEnum statut;
     private Short scoreConfiance;
     private LocalDateTime datePublication;
@@ -28,10 +30,14 @@ public class AnnonceRechercheDTO {
     private String ville;
     private BigDecimal superficie;
     private TypeLogementEnum typeLogement;
+    private Double latitude;
+    private Double longitude;
 
     private String proprietaireNom;
     private String proprietairePrenom;
     private Boolean proprietaireVerifie;
     private BigDecimal proprietaireNote;
     private Double distanceMetres;
+    private List<String> photos;
+    private List<String> equipements;
 }

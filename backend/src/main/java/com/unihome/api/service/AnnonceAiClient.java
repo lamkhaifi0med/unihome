@@ -15,7 +15,7 @@ import java.time.Duration;
 @Slf4j
 public class AnnonceAiClient {
 
-    private static final Duration TIMEOUT = Duration.ofSeconds(3);
+    private static final Duration TIMEOUT = Duration.ofSeconds(60);
 
     private final WebClient webClient;
 

@@ -14,6 +14,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -44,12 +46,10 @@ public class LogementService {
         logement.setTypeLogement(dto.getTypeLogement());
         logement.setStatutLogement(StatutLogementEnum.DISPONIBLE);
         logement.setCoordonnees(point);
-        String justificatifUrl = null;
-        if (justificatifFile != null && !justificatifFile.isEmpty()) {
-            justificatifUrl = photoService.uploaderJustificatif(justificatifFile);
-        } else {
-            justificatifUrl = dto.getJustificatifUrl();
+        if (justificatifFile == null || justificatifFile.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Justificatif du logement requis");
         }
+        String justificatifUrl = photoService.uploaderJustificatif(justificatifFile);
         logement.setJustificatifUrl(justificatifUrl);
         logement.setAdresseConfirmee(Boolean.FALSE);
 

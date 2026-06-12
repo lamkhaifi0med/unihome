@@ -20,5 +20,8 @@ public interface FavoriRepository extends JpaRepository<Favori, FavoriId> {
      * Find all favorites by annonce ID
      */
     List<Favori> findByIdAnnonceId(UUID annonceId);
+
+    long countByIdAnnonceId(UUID annonceId);
+    long countByIdEtudiantId(UUID etudiantId);
 }
 

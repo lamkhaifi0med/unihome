@@ -19,7 +19,7 @@ import java.util.UUID;
 @Entity
 @Immutable
 @Subselect(
-    "SELECT a.id AS annonce_id, a.titre, a.loyer, a.statut, a.score_confiance, " +
+    "SELECT a.id AS annonce_id, a.titre, a.loyer, a.charges_incluses, a.statut, a.score_confiance, " +
     "a.nb_signalements, a.date_expiration, l.id AS logement_id, l.adresse, l.ville, " +
     "l.superficie, l.type_logement, l.coordonnees AS coordonnees_logement, " +
     "u.nom AS proprietaire_nom, u.prenom AS proprietaire_prenom, u.est_verifie_cin AS proprietaire_verifie, " +
@@ -48,6 +48,9 @@ public class AnnonceAvecDistance {
 
     @Column(name = "loyer")
     private BigDecimal loyer;
+
+    @Column(name = "charges_incluses")
+    private Boolean chargesIncluses;
 
     @Column(name = "statut")
     @Enumerated(EnumType.STRING)

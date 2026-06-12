@@ -1,0 +1,28 @@
+# Python
+.venv/
+ai-service/.venv/
+ai-service/samples/
+**/__pycache__/
+**/*.py[cod]
+
+# Java / Maven
+backend/target/
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/vite-dev.log
+
+# Generated logs and local backups
+logs/
+*.log
+archives/
+*.rar
+
+# Local secrets and editor files
+.env
+*.env
+!.env.example
+.vscode/
+.idea/

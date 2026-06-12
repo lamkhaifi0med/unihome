@@ -18,5 +18,13 @@ public class AnnonceAiRequest {
     private List<String> photoUrls;
     private String justificatifUrl;
     private String proprietaireNomComplet;
+    private String ville;
+    private String adresse;
+    private String typeLogement;
+    private BigDecimal surface;
+    private Boolean chargesIncluses;
+    private Boolean proprietaireVerifieCin;
+    private BigDecimal noteProprietaire;
+    private Integer nbAvisProprietaire;
 }
 

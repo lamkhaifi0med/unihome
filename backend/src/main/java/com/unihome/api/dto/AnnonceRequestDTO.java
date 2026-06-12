@@ -38,7 +38,9 @@ public class AnnonceRequestDTO {
     private List<ContactAnnonceDTO> contacts;
 
     @NotEmpty
+    private List<Integer> equipementIds;
+
+    @NotEmpty
     @Size(min = 2, max = 10)
     private List<MultipartFile> photos;
 }
-

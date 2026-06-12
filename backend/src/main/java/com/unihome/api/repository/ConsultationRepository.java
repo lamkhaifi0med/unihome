@@ -4,9 +4,12 @@ import com.unihome.api.entity.Consultation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface ConsultationRepository extends JpaRepository<Consultation, UUID> {
     boolean existsByEtudiant_IdAndAnnonce_IdAndContactsAffichesTrue(UUID etudiantId, UUID annonceId);
+    long countByEtudiantId(UUID etudiantId);
+    Optional<Consultation> findTopByEtudiantIdAndAnnonceIdOrderByCreatedAtDesc(UUID etudiantId, UUID annonceId);
 }

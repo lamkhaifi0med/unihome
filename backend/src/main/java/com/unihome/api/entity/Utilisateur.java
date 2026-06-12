@@ -39,6 +39,9 @@ public class Utilisateur {
     @Column(name = "email_confirme", nullable = false)
     private Boolean emailConfirme;
 
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, insertable = false, updatable = false)
     private RoleEnum role;

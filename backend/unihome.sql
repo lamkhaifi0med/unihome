@@ -474,6 +474,7 @@ CREATE TABLE public.utilisateurs (
     mot_de_passe character varying(255) NOT NULL,
     est_verifie boolean DEFAULT false NOT NULL,
     email_confirme boolean DEFAULT false NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
     role public.role_enum NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
@@ -1092,9 +1093,46 @@ ALTER TABLE ONLY public.signalements
 ALTER TABLE ONLY public.utilisateurs
     ADD CONSTRAINT utilisateurs_universite_id_fkey FOREIGN KEY (universite_id) REFERENCES public.universites(id) ON DELETE SET NULL;
 
-
---
+-- Seed universites for demo
+INSERT INTO public.universites (nom, ville, adresse, coordonnees) VALUES
+    ('ENIAD Berkane', 'Berkane', 'Km 1 Route Aklim 63300', ST_SetSRID(ST_MakePoint(-2.3618, 34.9178), 4326)::geography),
+    ('EST Casablanca', 'Casablanca', 'KM 7 N1 Dar el Beida', ST_SetSRID(ST_MakePoint(-7.6552, 33.5413), 4326)::geography),
+    ('EST Fes', 'Fes', 'BP 2427 Route d''Imouzzer Fes 30000', ST_SetSRID(ST_MakePoint(-5.0024, 33.9887), 4326)::geography),
+    ('EST Sale', 'Sale', 'Avenue le Prince Heritier Sale 11060', ST_SetSRID(ST_MakePoint(-6.8127, 34.0500), 4326)::geography),
+    ('EST Agadir', 'Agadir', 'BP 33/S Route Tamsoult Agadir 80000', ST_SetSRID(ST_MakePoint(-9.5798, 30.4065), 4326)::geography),
+    ('EST Guelmim', 'Guelmim', 'Guelmim 81000', ST_SetSRID(ST_MakePoint(-10.0833, 29.0009), 4326)::geography),
+    ('EST Kenitra', 'Kenitra', 'BP 242 Kenitra 14000', ST_SetSRID(ST_MakePoint(-6.5859, 34.2474), 4326)::geography),
+    ('EST Essaouira', 'Essaouira', 'Km 9 Route d''Agadir BP 383 Ghazoua 44000', ST_SetSRID(ST_MakePoint(-9.7316, 31.4494), 4326)::geography),
+    ('EST Safi', 'Safi', 'Route Dar Si-Aissa BP 89 Av. Echahid Mbarek El Mokhtar', ST_SetSRID(ST_MakePoint(-9.2166, 32.3078), 4326)::geography),
+    ('EST Oujda', 'Oujda', 'BP 473 Complexe universitaire Al Qods Oujda 60000', ST_SetSRID(ST_MakePoint(-1.8974, 34.6492), 4326)::geography),
+    ('EST Meknes', 'Meknes', 'Km 5 Rue d''Agouray N6 Meknes 50040', ST_SetSRID(ST_MakePoint(-5.5800, 33.8574), 4326)::geography),
+    ('EST Khenifra', 'Khenifra', 'P24 Khenifra', ST_SetSRID(ST_MakePoint(-5.6519, 32.9783), 4326)::geography),
+    ('ENSA Agadir', 'Agadir', 'Avenue Tamsoult Agadir 80000', ST_SetSRID(ST_MakePoint(-9.5298, 30.4059), 4326)::geography),
+    ('ENSA Kenitra', 'Kenitra', 'BP 241 Av. de L''Universite Kenitra 14000', ST_SetSRID(ST_MakePoint(-6.5832, 34.2486), 4326)::geography),
+    ('ENSA Fes', 'Fes', 'Fes 30000', ST_SetSRID(ST_MakePoint(-4.9919, 33.9965), 4326)::geography),
+    ('ENSA Safi', 'Safi', 'Route Sidi Bouzid BP 63 Rue Sidi M''Barek Safi 46000', ST_SetSRID(ST_MakePoint(-9.2637, 32.3268), 4326)::geography),
+    ('ENSA El Jadida', 'El Jadida', 'El Jadida', ST_SetSRID(ST_MakePoint(-8.4341, 33.2510), 4326)::geography),
+    ('ENSA Khouribga', 'Khouribga', 'BP 77 Bd Beni Amir Khouribga 25000', ST_SetSRID(ST_MakePoint(-6.9138, 32.8972), 4326)::geography),
+    ('ENCG Casablanca', 'Casablanca', '2725 Rte des Chaux et Ciments Casablanca 20250', ST_SetSRID(ST_MakePoint(-7.5320, 33.5932), 4326)::geography),
+    ('ENCG Kenitra', 'Kenitra', 'BP 1420 Kenitra 14000', ST_SetSRID(ST_MakePoint(-6.5848, 34.2472), 4326)::geography),
+    ('ENCG Marrakech', 'Marrakech', 'Bd Allal Al Fassi Marrakech 40000', ST_SetSRID(ST_MakePoint(-8.0017, 31.6516), 4326)::geography),
+    ('ENCG Tanger', 'Tanger', 'Tanger 90000', ST_SetSRID(ST_MakePoint(-5.8452, 35.7573), 4326)::geography),
+    ('ENCG Agadir', 'Agadir', 'BP 37/S Rue Hachtouka Agadir 80000', ST_SetSRID(ST_MakePoint(-9.5552, 30.4021), 4326)::geography),
+    ('EIGSI Casablanca', 'Casablanca', 'Rte de l''Oasis Casablanca', ST_SetSRID(ST_MakePoint(-7.6307, 33.5576), 4326)::geography),
+    ('ENS Rabat', 'Rabat', 'Rue Mohamed Belhassan El Ouazzani Rabat', ST_SetSRID(ST_MakePoint(-6.8260, 33.9793), 4326)::geography),
+    ('ENSIAS Rabat', 'Rabat', 'Av. Mohamed Ben Abdellah Regragui Rabat', ST_SetSRID(ST_MakePoint(-6.8676, 33.9843), 4326)::geography),
+    ('ENSAM Rabat', 'Rabat', 'Av. des Forces Armees Royales Rabat 10100', ST_SetSRID(ST_MakePoint(-6.8766, 33.9694), 4326)::geography),
+    ('Ecole des Mines de Rabat (ENIM)', 'Rabat', 'Rabat 10000', ST_SetSRID(ST_MakePoint(-6.8549, 34.0003), 4326)::geography),
+    ('ENS Marrakech', 'Marrakech', 'Route Asfi Marrakech 40130', ST_SetSRID(ST_MakePoint(-8.0503, 31.6287), 4326)::geography),
+    ('ISGA Rabat', 'Rabat', '27 Av. Oqba Ibn Naafi Rabat 10090', ST_SetSRID(ST_MakePoint(-6.8442, 34.0089), 4326)::geography),
+    ('Universite Hassan II', 'Casablanca', 'Rue Tarik Ibnou Ziad Casablanca 20360', ST_SetSRID(ST_MakePoint(-7.6227, 33.5755), 4326)::geography),
+    ('Universite Mohammed VI (UM6SS)', 'Casablanca', 'Ave Mohamed Taieb Naciri Anfa City Casablanca', ST_SetSRID(ST_MakePoint(-7.6669, 33.5509), 4326)::geography),
+    ('Universite Internationale de Casablanca (UIC)', 'Casablanca', 'Route Provinciale 3020 Dar el Beida', ST_SetSRID(ST_MakePoint(-7.6104, 33.4957), 4326)::geography),
+    ('Universite Mohammed V', 'Rabat', 'Av. des Nations Unies Rabat 10000', ST_SetSRID(ST_MakePoint(-6.8436, 33.9991), 4326)::geography),
+    ('Universite Internationale de Rabat (UIR)', 'Rabat', 'Shore Rocade Rabat 11103', ST_SetSRID(ST_MakePoint(-6.7258, 33.9838), 4326)::geography),
+    ('Universite Sidi Mohamed Ben Abdellah', 'Fes', 'Dhar El Mahraz Fes 30000', ST_SetSRID(ST_MakePoint(-4.9799, 34.0338), 4326)::geography),
+    ('FST Fes', 'Fes', 'Route d''Imouzzer Fes 30000', ST_SetSRID(ST_MakePoint(-4.9897, 34.0000), 4326)::geography),
+    ('Universite Cadi Ayyad', 'Marrakech', 'Bd Abdelkrim Al Khattabi Marrakech 40000', ST_SetSRID(ST_MakePoint(-8.0197, 31.6428), 4326)::geography),
+    ('FST Marrakech', 'Marrakech', '112 Bd Abdelkrim Al Khattabi Marrakech 40000', ST_SetSRID(ST_MakePoint(-8.0203, 31.6445), 4326)::geography);
 -- PostgreSQL database dump complete
 --
-
-

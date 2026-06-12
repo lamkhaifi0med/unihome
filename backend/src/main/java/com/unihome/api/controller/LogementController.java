@@ -26,7 +26,7 @@ public class LogementController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<LogementResponseDTO> creerLogement(
             @RequestPart("logement") @Valid LogementRequestDTO dto,
-            @RequestPart(value = "justificatifFile", required = false) MultipartFile justificatifFile) {
+            @RequestPart("justificatifFile") MultipartFile justificatifFile) {
         Logement logement = logementService.creerLogement(dto, justificatifFile);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDTO(logement));
     }

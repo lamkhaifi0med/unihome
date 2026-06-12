@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -34,5 +35,8 @@ public class AnnonceResponseDTO {
     private String proprietairePrenom;
     private Boolean proprietaireVerifie;
     private BigDecimal proprietaireNote;
+
+    private List<Integer> equipementIds;
+    private List<String> equipements;
 }
 

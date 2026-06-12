@@ -23,12 +23,23 @@ public interface AnnonceAvecDistanceRepository extends JpaRepository<AnnonceAvec
      * @param universiteId University ID to calculate distance from
      * @param maxDistanceM Maximum distance in meters
      */
-    @Query("""
-        SELECT a FROM AnnonceAvecDistance a 
-        WHERE a.universiteId = :universiteId 
-        AND CAST(a.distanceCampusM AS double) <= :maxDistanceM
-        ORDER BY a.distanceCampusM ASC
-    """)
+    @Query(value = """
+        SELECT a.id AS annonce_id, a.titre, a.loyer, a.charges_incluses, a.statut, a.score_confiance,
+               a.nb_signalements, a.date_expiration, l.id AS logement_id, l.adresse, l.ville,
+               l.superficie, l.type_logement, l.coordonnees AS coordonnees_logement,
+               u.nom AS proprietaire_nom, u.prenom AS proprietaire_prenom,
+               u.est_verifie_cin AS proprietaire_verifie, u.note_moyenne AS proprietaire_note,
+               univ.id AS universite_id, univ.nom AS universite_nom,
+               ST_Distance(l.coordonnees::geography, univ.coordonnees::geography) AS distance_campus_m
+        FROM annonces a
+        JOIN logements l ON l.id = a.logement_id
+        JOIN utilisateurs u ON u.id = l.proprietaire_id
+        JOIN universites univ ON univ.id = :universiteId
+        WHERE a.statut = 'VALIDEE'::statut_annonce_enum
+          AND (a.date_expiration IS NULL OR a.date_expiration > now())
+          AND ST_Distance(l.coordonnees::geography, univ.coordonnees::geography) <= :maxDistanceM
+        ORDER BY distance_campus_m ASC
+    """, nativeQuery = true)
     List<AnnonceAvecDistance> findByUniversiteWithinDistance(
         @Param("universiteId") UUID universiteId,
         @Param("maxDistanceM") Double maxDistanceM
@@ -50,12 +61,31 @@ public interface AnnonceAvecDistanceRepository extends JpaRepository<AnnonceAvec
      * @param maxDistanceM Maximum distance in meters
      * @param pageable Pagination information
      */
-    @Query("""
-        SELECT a FROM AnnonceAvecDistance a
-        WHERE a.universiteId = :universiteId
-        AND a.statut = com.unihome.api.entity.StatutAnnonceEnum.VALIDEE
-        AND CAST(a.distanceCampusM AS double) <= :maxDistanceM
-    """)
+    @Query(value = """
+        SELECT a.id AS annonce_id, a.titre, a.loyer, a.charges_incluses, a.statut, a.score_confiance,
+               a.nb_signalements, a.date_expiration, l.id AS logement_id, l.adresse, l.ville,
+               l.superficie, l.type_logement, l.coordonnees AS coordonnees_logement,
+               u.nom AS proprietaire_nom, u.prenom AS proprietaire_prenom,
+               u.est_verifie_cin AS proprietaire_verifie, u.note_moyenne AS proprietaire_note,
+               univ.id AS universite_id, univ.nom AS universite_nom,
+               ST_Distance(l.coordonnees::geography, univ.coordonnees::geography) AS distance_campus_m
+        FROM annonces a
+        JOIN logements l ON l.id = a.logement_id
+        JOIN utilisateurs u ON u.id = l.proprietaire_id
+        JOIN universites univ ON univ.id = :universiteId
+        WHERE a.statut = 'VALIDEE'::statut_annonce_enum
+          AND (a.date_expiration IS NULL OR a.date_expiration > now())
+          AND ST_Distance(l.coordonnees::geography, univ.coordonnees::geography) <= :maxDistanceM
+        ORDER BY distance_campus_m ASC
+    """, countQuery = """
+        SELECT count(*)
+        FROM annonces a
+        JOIN logements l ON l.id = a.logement_id
+        JOIN universites univ ON univ.id = :universiteId
+        WHERE a.statut = 'VALIDEE'::statut_annonce_enum
+          AND (a.date_expiration IS NULL OR a.date_expiration > now())
+          AND ST_Distance(l.coordonnees::geography, univ.coordonnees::geography) <= :maxDistanceM
+    """, nativeQuery = true)
     Page<AnnonceAvecDistance> findByUniversiteWithinDistance(
         @Param("universiteId") UUID universiteId,
         @Param("maxDistanceM") Double maxDistanceM,

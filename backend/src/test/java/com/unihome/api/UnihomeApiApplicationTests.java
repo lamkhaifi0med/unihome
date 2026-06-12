@@ -11,6 +11,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 @SpringBootTest(properties = {
         "spring.jpa.hibernate.ddl-auto=none",
         "app.confirmation.base-url=http://localhost:8080/api/auth/confirm?token={token}",
+        "app.reset.base-url=http://localhost:8080/api/auth/reset-password?token={token}",
         "app.mail.from=no-reply@unihome.local"
 })
 @Import(UnihomeApiApplicationTests.TestMailConfig.class)

@@ -4,6 +4,8 @@ import com.unihome.api.dto.AuthResponseDTO;
 import com.unihome.api.dto.LoginRequestDTO;
 import com.unihome.api.dto.RegisterRequestDTO;
 import com.unihome.api.dto.ResendConfirmationRequestDTO;
+import com.unihome.api.dto.ForgotPasswordRequestDTO;
+import com.unihome.api.dto.ResetPasswordRequestDTO;
 import com.unihome.api.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,5 +53,15 @@ public class AuthController {
     @PostMapping("/resend-confirmation")
     public ResponseEntity<String> resendConfirmation(@Valid @RequestBody ResendConfirmationRequestDTO dto) {
         return ResponseEntity.ok(authService.resendConfirmationToken(dto));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDTO dto) {
+        return ResponseEntity.ok(authService.forgotPassword(dto));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequestDTO dto) {
+        return ResponseEntity.ok(authService.resetPassword(dto));
     }
 }

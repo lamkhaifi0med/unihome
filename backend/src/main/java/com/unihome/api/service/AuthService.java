@@ -4,6 +4,8 @@ import com.unihome.api.dto.AuthResponseDTO;
 import com.unihome.api.dto.LoginRequestDTO;
 import com.unihome.api.dto.RegisterRequestDTO;
 import com.unihome.api.dto.ResendConfirmationRequestDTO;
+import com.unihome.api.dto.ForgotPasswordRequestDTO;
+import com.unihome.api.dto.ResetPasswordRequestDTO;
 import com.unihome.api.entity.Admin;
 import com.unihome.api.entity.ConfirmationToken;
 import com.unihome.api.entity.Etudiant;
@@ -57,6 +59,7 @@ public class AuthService {
         utilisateur.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
         utilisateur.setEstVerifie(Boolean.FALSE);
         utilisateur.setEmailConfirme(Boolean.FALSE);
+        utilisateur.setIsActive(Boolean.TRUE);
 
         Utilisateur saved = utilisateurRepository.save(utilisateur);
         ConfirmationToken token = new ConfirmationToken(
@@ -99,6 +102,7 @@ public class AuthService {
         utilisateur.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
         utilisateur.setEstVerifie(Boolean.FALSE);
         utilisateur.setEmailConfirme(Boolean.FALSE);
+        utilisateur.setIsActive(Boolean.TRUE);
 
         if (utilisateur instanceof Proprietaire proprietaire) {
             proprietaire.setNumeroCin(dto.getNumeroCin());
@@ -128,6 +132,9 @@ public class AuthService {
         }
         Utilisateur utilisateur = utilisateurRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur not found"));
+        if (Boolean.FALSE.equals(utilisateur.getIsActive())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Compte suspendu");
+        }
         if (Boolean.FALSE.equals(utilisateur.getEmailConfirme())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email non confirme");
         }
@@ -137,6 +144,9 @@ public class AuthService {
     }
 
     public String confirmEmail(String token) {
+        if (token != null && token.startsWith("reset-")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalide");
+        }
         ConfirmationToken confirmationToken = confirmationTokenRepository.findByToken(token)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalide"));
         if (LocalDateTime.now().isAfter(confirmationToken.getExpiresAt())) {
@@ -171,6 +181,42 @@ public class AuthService {
         confirmationTokenRepository.save(token);
         emailService.sendConfirmationEmail(utilisateur.getEmail(), token.getToken());
         return "Nouveau token envoye";
+    }
+
+    public String forgotPassword(ForgotPasswordRequestDTO dto) {
+        confirmationTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(dto.getEmail()).orElse(null);
+        if (utilisateur == null) {
+            return "Si un compte existe, un email a ete envoye";
+        }
+        String token = "reset-" + UUID.randomUUID();
+        ConfirmationToken resetToken = new ConfirmationToken(
+                null,
+                utilisateur,
+                token,
+                LocalDateTime.now().plusHours(1),
+                LocalDateTime.now()
+        );
+        confirmationTokenRepository.save(resetToken);
+        emailService.sendPasswordResetEmail(utilisateur.getEmail(), token);
+        return "Email de reinitialisation envoye";
+    }
+
+    public String resetPassword(ResetPasswordRequestDTO dto) {
+        ConfirmationToken resetToken = confirmationTokenRepository.findByToken(dto.getToken())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalide"));
+        if (resetToken.getToken() == null || !resetToken.getToken().startsWith("reset-")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token invalide");
+        }
+        if (LocalDateTime.now().isAfter(resetToken.getExpiresAt())) {
+            confirmationTokenRepository.delete(resetToken);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expire");
+        }
+        Utilisateur utilisateur = resetToken.getUtilisateur();
+        utilisateur.setMotDePasse(passwordEncoder.encode(dto.getNewPassword()));
+        utilisateurRepository.save(utilisateur);
+        confirmationTokenRepository.delete(resetToken);
+        return "Mot de passe reinitialise";
     }
 
     private Utilisateur createUserByRole(RegisterRequestDTO dto) {

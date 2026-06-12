@@ -14,5 +14,9 @@ public class FraudScoreResponse {
     private Short scoreGlobal;
 
     private Map<String, Integer> detailScore;
+
+    private String raisonnement;
+
+    private Map<String, String> messages;
 }
 
