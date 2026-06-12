@@ -50,6 +50,8 @@ Set `GEMINI_API_KEY` in `ai-service/.env` before starting the AI service.
 
 The workspace can run the main services with Docker Compose.
 
+For teammate setup, see [docs/TEAMMATE_DOCKER_SETUP.md](docs/TEAMMATE_DOCKER_SETUP.md).
+
 1. Copy the root environment example:
 
 ```powershell

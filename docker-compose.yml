@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password1234}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./backend/unihome.sql:/docker-entrypoint-initdb.d/unihome.sql
@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
     container_name: unihome-ai-service
     ports:
-      - "8000:8000"
+      - "${AI_SERVICE_PORT:-8000}:8000"
     environment:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL_NAME: ${GEMINI_MODEL_NAME:-gemini-flash-latest}
@@ -78,7 +78,7 @@ services:
       dockerfile: Dockerfile
     container_name: unihome-frontend
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     depends_on:
       - api
     environment:

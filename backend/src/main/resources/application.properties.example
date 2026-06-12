@@ -27,9 +27,9 @@ spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.Ph
 python.service.url=${PYTHON_SERVICE_URL:http://localhost:8000}
 
 # Identifiants Cloudinary pour le stockage des photos
-cloudinary.cloud_name=${CLOUDINARY_CLOUD_NAME:}
-cloudinary.api_key=${CLOUDINARY_API_KEY:}
-cloudinary.api_secret=${CLOUDINARY_API_SECRET:}
+cloudinary.cloud-name=${CLOUDINARY_CLOUD_NAME:}
+cloudinary.api-key=${CLOUDINARY_API_KEY:}
+cloudinary.api-secret=${CLOUDINARY_API_SECRET:}
 
 # =============================================================================
 # CONFIGURATION SERVEUR & LOGS
