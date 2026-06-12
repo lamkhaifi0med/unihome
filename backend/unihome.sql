@@ -1094,6 +1094,8 @@ ALTER TABLE ONLY public.utilisateurs
     ADD CONSTRAINT utilisateurs_universite_id_fkey FOREIGN KEY (universite_id) REFERENCES public.universites(id) ON DELETE SET NULL;
 
 -- Seed universites for demo
+SET search_path = public, pg_catalog;
+
 INSERT INTO public.universites (nom, ville, adresse, coordonnees) VALUES
     ('ENIAD Berkane', 'Berkane', 'Km 1 Route Aklim 63300', ST_SetSRID(ST_MakePoint(-2.3618, 34.9178), 4326)::geography),
     ('EST Casablanca', 'Casablanca', 'KM 7 N1 Dar el Beida', ST_SetSRID(ST_MakePoint(-7.6552, 33.5413), 4326)::geography),
