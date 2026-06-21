@@ -32,6 +32,7 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "17"
+          cache: "maven"
 
       - name: Run tests
         working-directory: backend
@@ -42,5 +43,7 @@ jobs:
           SPRING_JPA_HIBERNATE_DDL_AUTO: none
           JWT_SECRET: c2VjdXJlLWtleS1mb3ItdW5paG9tZS0zMi1ieXRlcy0xMjM0NTY3ODkw
           PYTHON_SERVICE_URL: http://localhost:8000
+          # Dummy CI-only secret: SecurityConfig fails fast if blank/<32 chars.
+          INTERNAL_API_KEY: ci0000000000000000000000000000000000000000000000000000000000ci
         run: mvn -q -Dtest=UnihomeApiApplicationTests test
 
