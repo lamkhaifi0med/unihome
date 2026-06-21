@@ -45,5 +45,5 @@ jobs:
           PYTHON_SERVICE_URL: http://localhost:8000
           # Dummy CI-only secret: SecurityConfig fails fast if blank/<32 chars.
           INTERNAL_API_KEY: ci0000000000000000000000000000000000000000000000000000000000ci
-        run: mvn -q -Dtest=UnihomeApiApplicationTests test
+        run: ./mvnw -q -Dtest=UnihomeApiApplicationTests test
 
