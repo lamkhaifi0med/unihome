@@ -34,6 +34,13 @@ jobs:
           java-version: "17"
           cache: "maven"
 
+      # application.properties is gitignored (it holds local secrets), so CI
+      # must materialise it the same way the Dockerfile does. This file maps
+      # env vars to Spring properties, e.g. unihome.internal.api-key=${INTERNAL_API_KEY:}.
+      - name: Prepare application.properties
+        working-directory: backend
+        run: cp src/main/resources/application.properties.example src/main/resources/application.properties
+
       - name: Run tests
         working-directory: backend
         env:
@@ -46,4 +53,3 @@ jobs:
           # Dummy CI-only secret: SecurityConfig fails fast if blank/<32 chars.
           INTERNAL_API_KEY: ci0000000000000000000000000000000000000000000000000000000000ci
         run: ./mvnw -q -Dtest=UnihomeApiApplicationTests test
-
