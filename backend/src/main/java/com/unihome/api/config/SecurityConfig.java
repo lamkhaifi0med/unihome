@@ -1,6 +1,9 @@
 package com.unihome.api.config;
 
+import com.unihome.api.security.InternalApiKeyFilter;
 import com.unihome.api.security.JwtFilter;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -22,9 +25,29 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final InternalApiKeyFilter internalApiKeyFilter;
 
-    public SecurityConfig(JwtFilter jwtFilter) {
+    @Value("${unihome.internal.api-key:}")
+    private String internalApiKey;
+
+    public SecurityConfig(JwtFilter jwtFilter, InternalApiKeyFilter internalApiKeyFilter) {
         this.jwtFilter = jwtFilter;
+        this.internalApiKeyFilter = internalApiKeyFilter;
+    }
+
+    /**
+     * Fails fast at startup if the internal API key shared with the AI service
+     * is missing or shorter than 32 chars. Forces the operator to provision a
+     * strong secret in every environment.
+     */
+    @PostConstruct
+    public void validateInternalApiKey() {
+        if (internalApiKey == null || internalApiKey.length() < 32) {
+            throw new IllegalStateException(
+                    "unihome.internal.api-key is not configured or too short (>= 32 chars required). " +
+                            "Generate one with: openssl rand -hex 32"
+            );
+        }
     }
 
     @Bean
@@ -34,13 +57,17 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/internal/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/chatbot").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/annonces/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/avis/annonce/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/universites").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/equipements").permitAll()
                 .anyRequest().authenticated()
             )
+            .addFilterBefore(internalApiKeyFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

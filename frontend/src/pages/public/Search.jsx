@@ -50,7 +50,7 @@ function filterAnnonces(items, filters) {
 export default function SearchPage({
   defaultSearched = false,
   title = 'Rechercher un logement',
-  subtitle = 'Recherche ancree sur les campus marocains, avec annonces validees, score IA et distance depuis universite.',
+  subtitle = 'Recherche ancrée sur les campus marocains, avec annonces validées, score IA et distance depuis l’université.',
 }) {
   const [searchParams] = useSearchParams()
   const [universites, setUniversites] = useState([])
@@ -106,7 +106,7 @@ export default function SearchPage({
       const data = normalizePageResponse(response.data)
       setResults(filterAnnonces(data, nextFilters))
     } catch (err) {
-      setError(err?.response?.data?.detail || 'Recherche indisponible pour le moment.')
+      setError(err?.response?.data?.detail || 'La recherche est actuellement indisponible. Veuillez réessayer plus tard.')
       setResults([])
     } finally {
       setLoading(false)
@@ -161,7 +161,7 @@ export default function SearchPage({
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Annonces validees uniquement
+            Annonces validées uniquement
           </div>
           <h1 className="section-title mb-2">{title}</h1>
           <p className="max-w-3xl text-sm leading-relaxed text-gray-500 dark:text-gray-400">{subtitle}</p>
@@ -190,7 +190,7 @@ export default function SearchPage({
         <div className="rounded-3xl border border-emerald-100 bg-emerald-50/80 p-5 shadow-sm shadow-emerald-900/5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
           <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
             <CheckCircle2 className="h-4 w-4" />
-            Resultats valides
+            Résultats validés
           </div>
           <p className="mt-1 text-2xl font-bold text-emerald-900 dark:text-emerald-100">{sortedResults.length}</p>
         </div>
@@ -209,17 +209,17 @@ export default function SearchPage({
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-gray-900 dark:text-white">
-            {searched ? `${sortedResults.length} annonce${sortedResults.length > 1 ? 's' : ''} trouvee${sortedResults.length > 1 ? 's' : ''}` : 'Recherche prete'}
+            {searched ? `${sortedResults.length} annonce${sortedResults.length > 1 ? 's' : ''} trouvée${sortedResults.length > 1 ? 's' : ''}` : 'Recherche prête'}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Affichage par lots de 12, avec carte campus et distance quand une universite est choisie.
+            Affichage par lots de 12, avec carte campus et distance quand une université est choisie.
           </p>
         </div>
 
         <select value={sortBy} onChange={(event) => setSortBy(event.target.value)} className="input-field w-auto py-2 text-sm">
           <option value="distance">Distance campus</option>
           <option value="prix-asc">Prix croissant</option>
-          <option value="prix-desc">Prix decroissant</option>
+          <option value="prix-desc">Prix décroissant</option>
           <option value="score">Score IA</option>
         </select>
       </div>
@@ -235,7 +235,7 @@ export default function SearchPage({
             <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50/70 py-24 text-center dark:border-white/10 dark:bg-white/5">
               <Search className="mx-auto mb-4 h-16 w-16 text-gray-300 dark:text-gray-600" />
               <h3 className="font-display text-xl font-semibold text-gray-500 dark:text-gray-400">Lancez une recherche</h3>
-              <p className="mt-2 text-sm text-gray-400">Choisissez une universite, un budget, un rayon ou des equipements.</p>
+              <p className="mt-2 text-sm text-gray-400">Choisissez une université, un budget, un rayon ou des équipements.</p>
             </div>
           ) : sortedResults.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50/70 py-24 text-center dark:border-white/10 dark:bg-white/5">
@@ -282,7 +282,7 @@ export default function SearchPage({
 
       <div className="mt-4 flex items-center gap-2 text-xs text-gray-400 xl:hidden">
         <Map className="h-4 w-4" />
-        La carte est disponible sur grand ecran pour comparer les logements autour du campus.
+        La carte est disponible sur grand écran pour comparer les logements autour du campus.
       </div>
     </div>
   )

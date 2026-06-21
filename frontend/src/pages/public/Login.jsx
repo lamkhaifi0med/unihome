@@ -59,13 +59,13 @@ export default function Login() {
       console.error(err);
       const serverMessage = err.response?.data?.message || "";
       if (err.response?.status === 401) {
-        setError("Email ou mot de passe incorrect");
+        setError("Adresse e-mail ou mot de passe incorrect.");
       } else if (serverMessage.toLowerCase().includes("confirm")) {
-        setError("Votre email n'est pas confirmé.");
+        setError("Votre adresse e-mail n'est pas confirmée.");
       } else if (err.response?.status === 403) {
         setError(
           serverMessage ||
-            "Acces refuse. Verifiez que votre compte est confirme.",
+            "Accès refusé. Vérifiez que votre compte est confirmé.",
         );
       } else {
         setError(
@@ -79,14 +79,14 @@ export default function Login() {
 
   const handleResend = async () => {
     if (!email) {
-      setResendStatus("Entrez votre email puis reessayez.");
+      setResendStatus("Entrez votre adresse e-mail puis réessayez.");
       return;
     }
 
     setResendStatus("");
     try {
       await authApi.resendConfirmation(email);
-      setResendStatus("Lien de confirmation renvoye si le compte existe.");
+      setResendStatus("Lien de confirmation renvoyé si le compte existe.");
     } catch (err) {
       setResendStatus(
         err.response?.data?.message || "Impossible de renvoyer le lien.",
@@ -118,7 +118,7 @@ export default function Login() {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-white/40" />
                 <input
                   type="email"
-                  placeholder="Email"
+                  placeholder="Adresse e-mail"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="input-field pl-11"

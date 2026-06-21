@@ -27,7 +27,7 @@ import { adminApi } from "../../api/adminApi";
 
 const sidebarLinks = [
   { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/admin/moderation", label: "Moderation", icon: Shield },
+  { to: "/admin/moderation", label: "Modération", icon: Shield },
   { to: "/admin/signalements", label: "Signalements", icon: Flag },
   { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
 ];
@@ -73,21 +73,21 @@ function riskMeta(annonce) {
 
   if (annonce.statut === "SUSPENDUE" || reports > 0 || score < 40) {
     return {
-      label: "Risque eleve",
+      label: "Risque élevé",
       icon: AlertTriangle,
       badge: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
       dot: "bg-red-500",
-      note: "Controler attentivement avant toute validation.",
+      note: "Contrôler attentivement avant toute validation.",
     };
   }
   if (score < 70 || !cinOk) {
     return {
-      label: "A verifier",
+      label: "À vérifier",
       icon: AlertTriangle,
       badge:
         "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
       dot: "bg-amber-500",
-      note: "Quelques signaux demandent une verification manuelle.",
+      note: "Quelques signaux demandent une vérification manuelle.",
     };
   }
   return {
@@ -154,7 +154,7 @@ function QueueItem({ annonce, selected, decision, onSelect }) {
           <div className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
             <MapPin className="h-3 w-3" />
             <span className="truncate">
-              {annonce.ville || "Ville non definie"}
+              {annonce.ville || "Ville non définie"}
             </span>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -170,7 +170,7 @@ function QueueItem({ annonce, selected, decision, onSelect }) {
             </span>
             {decision && (
               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-white/10 dark:text-gray-300">
-                {decision === "approved" ? "Validee" : "Rejetee"}
+                {decision === "approved" ? "Validée" : "Rejetée"}
               </span>
             )}
           </div>
@@ -219,7 +219,7 @@ function DetailPanel({ annonce, decision, submitting, onApprove, onReject }) {
             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />{" "}
-                {annonce.adresse || annonce.ville || "Adresse non renseignee"}
+                {annonce.adresse || annonce.ville || "Adresse non renseignée"}
               </span>
               <span>{formatDate(annonce.datePublication)}</span>
             </p>
@@ -258,7 +258,7 @@ function DetailPanel({ annonce, decision, submitting, onApprove, onReject }) {
                     type="button"
                     onClick={goPrev}
                     className="absolute left-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow hover:bg-white dark:bg-white/15 dark:text-white"
-                    aria-label="Photo precedente"
+                    aria-label="Photo précédente"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -379,7 +379,7 @@ function DetailPanel({ annonce, decision, submitting, onApprove, onReject }) {
               </div>
             ) : (
               <p className="text-xs text-gray-400">
-                Aucun detail de score disponible.
+                Aucun détail de score disponible.
               </p>
             )}
           </div>
@@ -407,7 +407,7 @@ function DetailPanel({ annonce, decision, submitting, onApprove, onReject }) {
 
           <div className="rounded-2xl bg-gray-50 p-4 dark:bg-white/5">
             <p className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
-              Proprietaire
+              Propriétaire
             </p>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-accent-600 text-sm font-bold text-white">
@@ -427,11 +427,11 @@ function DetailPanel({ annonce, decision, submitting, onApprove, onReject }) {
             <div className="mt-3">
               {annonce.proprietaireVerifieCin ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
-                  <BadgeCheck className="h-3.5 w-3.5" /> CIN verifiee
+                  <BadgeCheck className="h-3.5 w-3.5" /> CIN vérifiée
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
-                  <AlertTriangle className="h-3.5 w-3.5" /> CIN a verifier
+                  <AlertTriangle className="h-3.5 w-3.5" /> CIN à vérifier
                 </span>
               )}
             </div>
@@ -441,7 +441,7 @@ function DetailPanel({ annonce, decision, submitting, onApprove, onReject }) {
             <div
               className={`rounded-2xl p-4 text-center text-sm font-semibold ${decision === "approved" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"}`}
             >
-              {decision === "approved" ? "Annonce validee" : "Annonce rejetee"}
+              {decision === "approved" ? "Annonce validée" : "Annonce rejetée"}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
@@ -477,10 +477,10 @@ function EmptyDetail() {
           <Eye className="h-7 w-7" />
         </div>
         <h3 className="font-display text-lg font-bold text-gray-900 dark:text-white">
-          Selectionnez une annonce
+          Sélectionnez une annonce
         </h3>
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          Les details complets, les photos et les actions de moderation
+          Les détails complets, les photos et les actions de modération
           s'affichent ici.
         </p>
       </div>
@@ -631,7 +631,7 @@ export default function AdminModeration({ isDark, onToggleTheme }) {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold text-gray-900 dark:text-white">
-              Moderation des annonces
+              Modération des annonces
             </h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {counts.EN_ATTENTE} annonce(s) en attente - {counts.SUSPENDUE}{" "}
@@ -689,7 +689,7 @@ export default function AdminModeration({ isDark, onToggleTheme }) {
               <div className="rounded-2xl bg-gray-50 p-8 text-center dark:bg-white/5">
                 <CheckCircle className="mx-auto mb-3 h-10 w-10 text-emerald-500" />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Aucune annonce dans cette categorie.
+                  Aucune annonce dans cette catégorie.
                 </p>
               </div>
             )}

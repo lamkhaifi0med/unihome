@@ -138,7 +138,7 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
         universiteId: savedProfile.universiteId || current.universiteId,
         budgetMax: savedProfile.budgetMax ?? current.budgetMax,
       }))
-      setMessage({ type: 'success', text: 'Profil sauvegarde avec succes.' })
+      setMessage({ type: 'success', text: 'Profil sauvegardé avec succès.' })
     } catch (error) {
       setMessage({
         type: 'error',
@@ -154,7 +154,7 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
       <div className="mb-8">
         <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white">Mon profil</h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-          Completez vos informations pour recevoir des annonces mieux adaptees.
+          Complétez vos informations pour recevoir des annonces mieux adaptées.
         </p>
       </div>
 
@@ -166,7 +166,7 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
             </div>
             <div className="min-w-0">
               <h2 className="font-display font-bold text-gray-900 dark:text-white truncate">
-                {[form.prenom, form.nom].filter(Boolean).join(' ') || 'Etudiant'}
+                {[form.prenom, form.nom].filter(Boolean).join(' ') || 'Étudiant'}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{form.email}</p>
             </div>
@@ -174,7 +174,7 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
 
           <div className="mt-6 rounded-2xl bg-white/70 dark:bg-white/5 border border-gray-100 dark:border-white/10 p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Profil complete</span>
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Profil complété</span>
               <span className="text-sm font-bold text-primary-600 dark:text-primary-300">{completion}%</span>
             </div>
             <div className="h-2 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
@@ -184,7 +184,7 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
               />
             </div>
             <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-              Universite, ville et budget aident UniHome a classer les logements les plus pertinents.
+              Université, ville et budget aident UniHome à classer les logements les plus pertinents.
             </p>
           </div>
 
@@ -193,10 +193,10 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
               <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-300 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {selectedUniversity?.nom || 'Universite non definie'}
+                  {selectedUniversity?.nom || 'Université non sélectionnée'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {form.villeRecherche || 'Ville recherchee non definie'}
+                  {form.villeRecherche || 'Ville recherchée non sélectionnée'}
                 </p>
               </div>
             </div>
@@ -214,10 +214,10 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
               <div className="flex items-start justify-between gap-4 pb-5 border-b border-gray-100 dark:border-white/10">
                 <div>
                   <h3 className="font-display font-semibold text-lg text-gray-900 dark:text-white">
-                    Informations et preferences
+                    Informations et préférences
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Ces champs remplissent votre ligne etudiant dans la base.
+                    Ces champs complètent votre profil étudiant dans la base.
                   </p>
                 </div>
                 <button
@@ -250,7 +250,7 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Prenom
+                    Prénom
                   </label>
                   <input type="text" value={form.prenom} onChange={set('prenom')} className="input-field" />
                 </div>
@@ -264,7 +264,7 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
 
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                  Email
+                  Adresse e-mail
                 </label>
                 <input type="email" value={form.email} disabled className="input-field opacity-70 cursor-not-allowed" />
               </div>
@@ -272,10 +272,10 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Universite
+                    Université
                   </label>
                   <select value={form.universiteId} onChange={handleUniversityChange} className="input-field">
-                    <option value="">Selectionner une universite</option>
+                    <option value="">Sélectionner une université</option>
                     {universites.map((universite) => (
                       <option key={universite.id} value={universite.id}>
                         {universite.nom} - {universite.ville}
@@ -285,10 +285,10 @@ export default function ProfilEtudiant({ isDark, onToggleTheme }) {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Ville recherchee
+                    Ville recherchée
                   </label>
                   <select value={form.villeRecherche} onChange={set('villeRecherche')} className="input-field">
-                    <option value="">Selectionner une ville</option>
+                    <option value="">Sélectionner une ville</option>
                     {cityOptions.map((city) => (
                       <option key={city} value={city}>
                         {city}

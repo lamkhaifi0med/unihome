@@ -11,7 +11,6 @@ import {
   Shield,
 } from "lucide-react";
 import { authApi } from "../../api/authApi";
-import { API_BASE_URL } from "../../api/axios";
 import { useAuth } from "../../hooks/useAuth";
 import signupIllustration from "../../assets/auth/signup-amico.svg";
 
@@ -95,7 +94,7 @@ export default function Register() {
     setConfirmationUrl("");
 
     if (!values.role) {
-      setSubmitError("Veuillez selectionner un role pour continuer.");
+      setSubmitError("Veuillez sélectionner un rôle pour continuer.");
       return;
     }
 
@@ -106,7 +105,7 @@ export default function Register() {
 
     if (values.role === ROLE_PROPRIETAIRE && !values.telephone?.trim()) {
       setSubmitError(
-        "Le numero de telephone est requis pour les proprietaires.",
+        "Le numéro de téléphone est obligatoire pour les propriétaires.",
       );
       return;
     }
@@ -131,7 +130,7 @@ export default function Register() {
       const token = response?.data?.confirmationToken;
       if (token) {
         setConfirmationUrl(
-          `${API_BASE_URL}/api/auth/confirm?token=${encodeURIComponent(token)}`,
+          `${window.location.origin}/confirm-email?token=${encodeURIComponent(token)}`,
         );
       }
       setSuccessEmail(values.email);
@@ -147,7 +146,7 @@ export default function Register() {
         null;
       setSubmitError(
         serverMsg ||
-          "Impossible de creer le compte. Verifiez vos informations et reessayez.",
+          "Impossible de créer le compte. Vérifiez vos informations et réessayez.",
       );
     }
   };
@@ -157,9 +156,9 @@ export default function Register() {
     setResendStatus("");
     try {
       await authApi.resendConfirmation(successEmail);
-      setResendStatus("Email de confirmation renvoye.");
+      setResendStatus("E-mail de confirmation renvoyé.");
     } catch (error) {
-      setResendStatus("Echec de renvoi. Reessayez plus tard.");
+      setResendStatus("Impossible de renvoyer l'e-mail. Veuillez réessayer plus tard.");
     }
   };
 
@@ -182,10 +181,10 @@ export default function Register() {
                   <Check className="w-10 h-10 text-emerald-400" />
                 </div>
                 <h1 className="font-display font-bold text-2xl text-white mb-2">
-                  Compte cree ! Verifiez votre email.
+                  Compte créé ! Vérifiez votre adresse e-mail.
                 </h1>
                 <p className="text-white/60 text-sm mb-6">
-                  Un lien de confirmation a ete envoye a{" "}
+                  Un lien de confirmation a été envoyé à{" "}
                   <span className="text-white font-semibold">
                     {successEmail}
                   </span>
@@ -196,16 +195,16 @@ export default function Register() {
                   onClick={handleResend}
                   className="text-indigo-300 hover:text-indigo-200 text-sm font-semibold"
                 >
-                  Pas recu ? Renvoyer l'email
+                  Pas reçu ? Renvoyer l'e-mail
                 </button>
                 {confirmationUrl && (
                   <div className="mt-5 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-left">
                     <p className="text-amber-100 text-sm font-semibold">
-                      Mode local Docker : SMTP n'est pas configure.
+                      Mode local Docker : SMTP n'est pas configuré.
                     </p>
                     <p className="text-white/60 text-xs mt-1">
                       Cliquez ici pour confirmer ce compte pendant le
-                      developpement.
+                      développement.
                     </p>
                     <a
                       href={confirmationUrl}
@@ -228,10 +227,10 @@ export default function Register() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                 <div className="text-center">
                   <h1 className="font-display font-bold text-3xl text-white mb-2">
-                    Creez votre compte
+                    Créez votre compte
                   </h1>
                   <p className="text-white/60">
-                    Choisissez un role pour afficher le formulaire.
+                    Choisissez un rôle pour afficher le formulaire.
                   </p>
                 </div>
 
@@ -249,7 +248,7 @@ export default function Register() {
                       <GraduationCap className="w-6 h-6 text-cyan-300" />
                     </div>
                     <h2 className="font-display font-bold text-lg text-white">
-                      Je suis etudiant
+                      Je suis un étudiant
                     </h2>
                     <p className="text-white/60 text-sm">
                       Je cherche un logement.
@@ -274,7 +273,7 @@ export default function Register() {
                       <Building2 className="w-6 h-6 text-cyan-300" />
                     </div>
                     <h2 className="font-display font-bold text-lg text-white">
-                      Je suis proprietaire
+                      Je suis un propriétaire
                     </h2>
                     <p className="text-white/60 text-sm">
                       Je propose un logement.
@@ -294,9 +293,9 @@ export default function Register() {
                     <div>
                       <input
                         type="text"
-                        placeholder="Prenom"
+                        placeholder="Prénom"
                         className="input-field"
-                        {...register("prenom", { required: "Prenom requis" })}
+                        {...register("prenom", { required: "Prénom requis" })}
                       />
                       {errors.prenom && (
                         <p className="text-red-400 text-xs mt-1">
@@ -322,13 +321,13 @@ export default function Register() {
                   <div className="mt-4">
                     <input
                       type="email"
-                      placeholder="Email"
+                      placeholder="Adresse e-mail"
                       className="input-field"
                       {...register("email", {
-                        required: "Email requis",
+                        required: "Adresse e-mail requise",
                         pattern: {
                           value: /\S+@\S+\.\S+/,
-                          message: "Email invalide",
+                          message: "Adresse e-mail invalide",
                         },
                       })}
                     />
@@ -344,15 +343,15 @@ export default function Register() {
                       type="tel"
                       placeholder={
                         role === ROLE_PROPRIETAIRE
-                          ? "Numero de telephone"
-                          : "Numero de telephone (optionnel)"
+                          ? "Numéro de téléphone"
+                          : "Numéro de téléphone (optionnel)"
                       }
                       className="input-field"
                       {...register("telephone", {
                         validate: (value) =>
                           role !== ROLE_PROPRIETAIRE ||
                           Boolean(value?.trim()) ||
-                          "Telephone requis",
+                          "Téléphone requis",
                       })}
                     />
                     {errors.telephone && (
@@ -428,10 +427,10 @@ export default function Register() {
                     <div className="mt-6 space-y-4">
                       <input
                         type="text"
-                        placeholder="Numero CIN"
+                        placeholder="Numéro CIN"
                         className="input-field"
                         {...register("numeroCin", {
-                          required: "Numero CIN requis",
+                          required: "Numéro CIN requis",
                         })}
                       />
                       {errors.numeroCin && (
@@ -473,7 +472,7 @@ export default function Register() {
                           />
                         </label>
                         <p className="text-white/30 text-xs mt-2">
-                          Votre CIN sera verifiee sous 24h par notre equipe.
+                          Votre CIN sera vérifiée sous 24 h par notre équipe.
                         </p>
                       </div>
                       {cinFileError && (
@@ -486,7 +485,7 @@ export default function Register() {
                         <div className="mt-4 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
                           <img
                             src={cinPreview}
-                            alt="Apercu CIN"
+                            alt="Aperçu CIN"
                             className="h-20 w-28 object-cover rounded-xl"
                           />
                           <div className="flex-1 text-white/70 text-sm">
@@ -514,7 +513,7 @@ export default function Register() {
                       <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-3">
                         <Shield className="w-4 h-4 text-cyan-300 flex-shrink-0 mt-0.5" />
                         <p className="text-white/60 text-xs">
-                          3 signalements confirmes declenchent une suspension
+                          3 signalements confirmés déclenchent une suspension
                           automatique.
                         </p>
                       </div>
@@ -533,11 +532,11 @@ export default function Register() {
                   disabled={isSubmitting}
                   className="btn-primary w-full justify-center"
                 >
-                  {isSubmitting ? "Creation du compte..." : "Creer mon compte"}
+                  {isSubmitting ? "Création du compte..." : "Créer mon compte"}
                 </button>
 
                 <p className="text-center text-white/50 text-sm">
-                  Deja inscrit ?{" "}
+                  Déjà inscrit ?{" "}
                   <Link
                     to="/login"
                     className="text-indigo-300 hover:text-indigo-200 font-semibold"

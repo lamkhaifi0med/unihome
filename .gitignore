@@ -26,3 +26,13 @@ archives/
 !.env.example
 .vscode/
 .idea/
+
+# Reference kit (encadrant) and report deliverables — not part of the app
+UniHome-Chatbot_final (1)/
+docs/rapport/
+docs/chatbot_guide.md
+docs/RAPPORT_PROJET_UNIHOME_ETAT_ACTUEL.md
+frontend/public/demo-photos/
+
+# Local test seed data (app ships empty; schema lives in backend/unihome.sql)
+backend/sql/

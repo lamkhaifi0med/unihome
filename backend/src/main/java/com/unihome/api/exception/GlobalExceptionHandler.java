@@ -43,6 +43,14 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
+    @ExceptionHandler(IllegalReviewException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalReview(IllegalReviewException exception) {
+        // The @ResponseStatus on the exception class only sets the HTTP code;
+        // without this handler Spring Boot would drop the message from the
+        // body, so the frontend would only see a generic 400.
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException exception) {
         String message = exception.getBindingResult().getFieldErrors().stream()

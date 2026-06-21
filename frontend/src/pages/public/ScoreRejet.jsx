@@ -3,7 +3,7 @@ import { XCircle, AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react'
 
 export default function ScoreRejet() {
   const raisons = [
-    { label: 'Photos suspectes détectées', detail: 'Les images semblent correspondre à d\'autres annonces existantes (hash perceptuel pHash). Utilisez vos propres photos originales.', icon: '📷', score: 0 },
+    { label: 'Photos suspectes détectées', detail: 'Les images semblent correspondre à d\'autres annonces existantes (analyse pHash). Utilisez vos propres photos originales.', icon: '📷', score: 0 },
     { label: 'Description insuffisante', detail: 'La description est trop courte ou contient des mots suspects. Rédigez une description détaillée et authentique.', icon: '📝', score: -8 },
     { label: 'Prix incohérent', detail: 'Le loyer proposé est anormalement bas pour ce type de logement dans cette ville. Ajustez le prix à la réalité du marché.', icon: '💰', score: -12 },
   ]
@@ -18,8 +18,8 @@ export default function ScoreRejet() {
         <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-500/20 border border-red-200 dark:border-red-500/30 flex items-center justify-center mx-auto mb-5">
           <XCircle className="w-10 h-10 text-red-500" />
         </div>
-        <h1 className="font-display font-bold text-3xl text-gray-900 dark:text-white mb-3">Annonce Rejetée</h1>
-        <p className="text-gray-500 dark:text-gray-400">Votre annonce a obtenu un score de confiance de <strong className="text-red-600 dark:text-red-400">28/100</strong>, inférieur au seuil minimum de 40.</p>
+        <h1 className="font-display font-bold text-3xl text-gray-900 dark:text-white mb-3">Annonce rejetée</h1>
+        <p className="text-gray-500 dark:text-gray-400">Votre annonce n'a pas atteint le score minimum de 40 : score obtenu <strong className="text-red-600 dark:text-red-400">28/100</strong>.</p>
       </div>
 
       <div className="glass-light rounded-2xl p-6 mb-6">
@@ -46,7 +46,7 @@ export default function ScoreRejet() {
       <div className="glass-light rounded-2xl p-6 mb-6">
         <h3 className="font-display font-semibold text-gray-900 dark:text-white mb-4">Comment améliorer votre annonce ?</h3>
         <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-          {['Prenez de nouvelles photos originales de haute qualité', 'Rédigez une description complète et détaillée (min. 100 mots)', 'Vérifiez votre identité avec votre CIN (badge propriétaire vérifié)', 'Alignez votre prix avec les tarifs du marché local'].map(t => (
+          {['Prenez de nouvelles photos originales de haute qualité', 'Rédigez une description détaillée et authentique (minimum 100 mots)', 'Vérifiez votre identité avec votre CIN pour obtenir le badge de propriétaire vérifié', 'Alignez votre prix avec les tarifs du marché local'].map(t => (
             <li key={t} className="flex items-start gap-2">
               <span className="text-primary-500 mt-0.5">→</span> {t}
             </li>

@@ -395,7 +395,7 @@ export default function SearchMap({ annonces, campus, selectedId, onSelect }) {
           Carte indisponible
         </h3>
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          Leaflet n'a pas pu etre charge. Les resultats restent disponibles en
+          Leaflet n'a pas pu être chargé. Les résultats restent disponibles en
           liste.
         </p>
       </aside>
@@ -431,7 +431,7 @@ export default function SearchMap({ annonces, campus, selectedId, onSelect }) {
             <p className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">
               {campus
                 ? `${campus.nom} - ${campus.ville}`
-                : "Selectionnez une universite pour centrer la recherche."}
+                : "Sélectionnez une université pour centrer la recherche."}
             </p>
           </div>
           {campus && (

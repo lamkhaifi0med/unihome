@@ -13,7 +13,7 @@ export const authApi = {
   },
   login: (email, motDePasse) =>
     api.post("/api/auth/login", { email, motDePasse }),
-  confirmEmail: (token) => api.get(`/api/auth/confirm?token=${token}`),
+  confirmEmail: (token) => api.get("/api/auth/confirm", { params: { token } }),
   resendConfirmation: (email) =>
     api.post("/api/auth/resend-confirmation", { email }),
   forgotPassword: (email) => api.post("/api/auth/forgot-password", { email }),

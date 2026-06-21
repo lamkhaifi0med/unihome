@@ -29,8 +29,15 @@ const sidebarLinks = [
   { to: "/profil-proprietaire", label: "Mon profil", icon: User },
 ];
 
-const steps = ["Logement", "Photos", "Equipements", "Contacts"];
+const steps = ["Logement", "Photos", "Équipements", "Contacts"];
 const typeLogements = ["STUDIO", "CHAMBRE", "COLOCATION", "APPARTEMENT"];
+const statusLabels = {
+  VALIDEE: "Publiée",
+  EN_ATTENTE: "En vérification",
+  REJETEE: "Rejetée",
+  SUSPENDUE: "Suspendue",
+  ARCHIVEE: "Archivée",
+};
 const defaultMapCenter = { latitude: 34.018125, longitude: -5.007845 };
 const LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 const LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
@@ -203,7 +210,7 @@ function LocationPicker({ latitude, longitude, mapCenter, onChange }) {
     return (
       <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
         La carte interactive est indisponible. Utilisez la recherche d'adresse
-        ou reessayez plus tard.
+        ou réessayez plus tard.
       </div>
     );
   }
@@ -222,14 +229,14 @@ function LocationPicker({ latitude, longitude, mapCenter, onChange }) {
           </div>
         )}
         <div className="pointer-events-none absolute left-4 top-4 max-w-sm rounded-2xl border border-white/80 bg-white/90 p-3 text-xs text-gray-600 shadow-xl backdrop-blur dark:border-white/10 dark:bg-dark-900/90 dark:text-gray-300">
-          Cliquez sur la carte ou deplacez le marqueur pour choisir l'entree
+          Cliquez sur la carte ou déplacez le marqueur pour choisir l'entrée
           exacte du logement.
         </div>
       </div>
       <div className="flex flex-col gap-3 border-t border-gray-200 dark:border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-gray-500 dark:text-gray-400">
           {latitude !== "" && longitude !== ""
-            ? `Coordonnees selectionnees : ${latitude}, ${longitude}`
+            ? `Coordonnées sélectionnées : ${latitude}, ${longitude}`
             : "Aucun point choisi. Cliquez sur la carte ou recherchez une adresse."}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -238,14 +245,14 @@ function LocationPicker({ latitude, longitude, mapCenter, onChange }) {
             onClick={centerOnCity}
             className="btn-ghost text-sm"
           >
-            Centrer ville
+            Centrer sur la ville
           </button>
           <button
             type="button"
             onClick={useMapCenter}
             className="btn-ghost text-sm"
           >
-            Utiliser centre
+            Utiliser ce point
           </button>
           <button
             type="button"
@@ -303,7 +310,7 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
         if (equipementsResult.status === "fulfilled") {
           setEquipements(equipementsResult.value.data || []);
         } else {
-          setError("Impossible de charger les equipements.");
+          setError("Impossible de charger les équipements.");
         }
         if (universitesResult.status === "fulfilled") {
           setUniversites(universitesResult.value.data || []);
@@ -385,7 +392,7 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
 
   const searchAddressOnMap = async () => {
     if (!form.ville) {
-      setError("Selectionnez d'abord la ville.");
+      setError("Sélectionnez d'abord la ville.");
       return;
     }
     if (!form.adresse.trim()) {
@@ -481,13 +488,13 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
 
   const validate = () => {
     if (!user?.id)
-      return "Utilisateur proprietaire introuvable. Reconnectez-vous.";
+      return "Utilisateur propriétaire introuvable. Reconnectez-vous.";
     if (!form.titre.trim()) return "Le titre de l'annonce est requis.";
     if (!form.typeLogement) return "Le type de logement est requis.";
     if (!form.ville) return "La ville est requise.";
     if (!form.adresse.trim()) return "L'adresse est requise.";
     if (!form.superficie || Number(form.superficie) <= 0)
-      return "La superficie doit etre positive.";
+      return "La superficie doit être positive.";
     if (
       form.latitude === "" ||
       Number(form.latitude) < -90 ||
@@ -501,13 +508,13 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
     )
       return "Longitude invalide.";
     if (!form.loyer || Number(form.loyer) <= 0)
-      return "Le loyer doit etre positif.";
+      return "Le loyer doit être positif.";
     if (!form.description.trim()) return "La description est requise.";
     if (!justificatifFile) return "Le justificatif du logement est requis.";
     if (photos.length < 2) return "Ajoutez au moins 2 photos.";
     if (photos.length > 10) return "Maximum 10 photos.";
     if (selectedEquipementIds.length === 0)
-      return "Selectionnez au moins un equipement.";
+      return "Sélectionnez au moins un équipement.";
     if (buildContacts().length === 0)
       return "Ajoutez au moins un moyen de contact.";
     return "";
@@ -559,7 +566,7 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
         null;
       setError(
         serverMsg ||
-          "Impossible de publier l'annonce. Verifiez les informations.",
+          "Impossible de publier l'annonce. Vérifiez les informations.",
       );
     } finally {
       setSubmitting(false);
@@ -582,12 +589,14 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
               Annonce soumise !
             </h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
-              Votre annonce est maintenant enregistree avec ses equipements.
+              Votre annonce est maintenant enregistrée avec ses équipements.
             </p>
             {createdAnnonce?.statut && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 Statut actuel :{" "}
-                <span className="font-semibold">{createdAnnonce.statut}</span>
+                <span className="font-semibold">
+                  {statusLabels[createdAnnonce.statut] || createdAnnonce.statut}
+                </span>
               </p>
             )}
             <button
@@ -612,7 +621,7 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
           Publier une annonce
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm">
-          Creez le logement puis envoyez l'annonce complete au backend
+          Créez le logement puis envoyez l'annonce complète au backend
         </p>
       </div>
 
@@ -689,13 +698,13 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
             </div>
             {cityOptions.length === 0 && !loadingUniversites && (
               <p className="text-sm text-red-500">
-                Aucune ville universitaire n'est disponible depuis la base.
+                Aucune ville universitaire n'est disponible dans la base de données.
               </p>
             )}
             <div className="flex flex-col gap-3 md:flex-row">
               <input
                 type="text"
-                placeholder="Adresse complete"
+                placeholder="Adresse complète"
                 value={form.adresse}
                 onChange={set("adresse")}
                 className="input-field flex-1"
@@ -755,7 +764,7 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
             </div>
             <textarea
               rows={4}
-              placeholder="Description detaillee du logement..."
+              placeholder="Description détaillée du logement..."
               value={form.description}
               onChange={set("description")}
               className="input-field resize-none"
@@ -772,8 +781,8 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
                     </label>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                       Ajoutez un document qui prouve que le logement existe et
-                      qu'il est lie au proprietaire. Il est utilise par l'IA et,
-                      si besoin, par l'equipe de moderation.
+                      qu'il est lié au propriétaire. Il est utilisé par l'IA et,
+                      si besoin, par l'équipe de modération.
                     </p>
                   </div>
                 </div>
@@ -782,10 +791,10 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
               <div className="mt-4 grid gap-3 text-xs text-gray-500 dark:text-gray-400 md:grid-cols-3">
                 <div className="rounded-2xl border border-white/70 bg-white/70 p-3 dark:border-white/10 dark:bg-white/5">
                   <span className="font-semibold text-gray-700 dark:text-gray-200">
-                    Exemples acceptes
+                    Exemples acceptés
                   </span>
                   <p className="mt-1">
-                    Titre, contrat, quittance, facture ou attestation liee au
+                    Titre, contrat, quittance, facture ou attestation liée au
                     logement.
                   </p>
                 </div>
@@ -803,7 +812,7 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
                     Formats
                   </span>
                   <p className="mt-1">
-                    PDF, JPG ou PNG. Evitez les documents flous, coupes ou
+                    PDF, JPG ou PNG. Évitez les documents flous, coupés ou
                     illisibles.
                   </p>
                 </div>
@@ -952,15 +961,15 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
         {step === 3 && (
           <div>
             <h2 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-4">
-              Equipements disponibles
+              Équipements disponibles
             </h2>
             {loadingEquipements ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Chargement des equipements...
+                Chargement des équipements...
               </p>
             ) : equipements.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Aucun equipement n'est configure dans la base.
+                Aucun équipement n'est configuré dans la base.
               </p>
             ) : (
               <div className="flex flex-wrap gap-2">
@@ -978,8 +987,8 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
             )}
             {selectedEquipementIds.length > 0 && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                {selectedEquipementIds.length} equipement
-                {selectedEquipementIds.length > 1 ? "s" : ""} selectionne
+                {selectedEquipementIds.length} équipement
+                {selectedEquipementIds.length > 1 ? "s" : ""} sélectionné
                 {selectedEquipementIds.length > 1 ? "s" : ""}
               </p>
             )}
@@ -1049,7 +1058,7 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
               onClick={() => setStep((prev) => prev - 1)}
               className="btn-ghost text-sm"
             >
-              Etape precedente
+              Étape précédente
             </button>
           ) : (
             <span />
@@ -1060,7 +1069,7 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
               onClick={() => setStep((prev) => prev + 1)}
               className="btn-primary flex items-center gap-2"
             >
-              Etape suivante <ChevronRight className="w-4 h-4" />
+              Étape suivante <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button

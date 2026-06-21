@@ -14,7 +14,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     setError("");
     if (!email) {
-      setError("Veuillez entrer votre adresse email.");
+      setError("Veuillez entrer votre adresse e-mail.");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function ForgotPassword() {
                 <CheckCircle2 className="w-14 h-14 text-emerald-400" />
               </div>
               <h2 className="text-white font-semibold text-lg">
-                Email envoyé !
+                E-mail envoyé !
               </h2>
               <p className="text-white/60 text-sm leading-relaxed">
                 Si un compte existe pour{" "}
@@ -61,7 +61,7 @@ export default function ForgotPassword() {
                 recevrez un lien de réinitialisation dans quelques minutes.
               </p>
               <p className="text-white/40 text-xs">
-                Pensez à vérifier vos spams.
+                Pensez à vérifier votre dossier spam.
               </p>
               <Link
                 to="/login"
@@ -73,7 +73,7 @@ export default function ForgotPassword() {
           ) : (
             <>
               <p className="text-white/60 text-sm mb-6 leading-relaxed">
-                Entrez l'adresse email associée à votre compte. Nous vous
+                Entrez l'adresse e-mail associée à votre compte. Nous vous
                 enverrons un lien pour réinitialiser votre mot de passe.
               </p>
 
@@ -82,7 +82,7 @@ export default function ForgotPassword() {
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-white/40" />
                   <input
                     type="email"
-                    placeholder="Votre adresse email"
+                    placeholder="Votre adresse e-mail"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="input-field pl-11"

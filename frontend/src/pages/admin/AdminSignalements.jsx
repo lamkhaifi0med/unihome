@@ -26,7 +26,7 @@ import { adminApi } from "../../api/adminApi";
 
 const sidebarLinks = [
   { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/admin/moderation", label: "Moderation", icon: Shield },
+  { to: "/admin/moderation", label: "Modération", icon: Shield },
   { to: "/admin/signalements", label: "Signalements", icon: Flag },
   { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
 ];
@@ -40,13 +40,13 @@ const statusMeta = {
     className: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
   },
   TRAITE: {
-    label: "Traite",
+    label: "Traité",
     icon: CheckCircle2,
     className:
       "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
   },
   REJETE: {
-    label: "Non fonde",
+    label: "Non fondé",
     icon: XCircle,
     className: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400",
   },
@@ -62,6 +62,14 @@ const annonceStatusMeta = {
   ARCHIVEE: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400",
 };
 
+const annonceStatusLabels = {
+  VALIDEE: "Validée",
+  EN_ATTENTE: "En attente",
+  REJETEE: "Rejetée",
+  SUSPENDUE: "Suspendue",
+  ARCHIVEE: "Archivée",
+};
+
 const decisionGuide = [
   {
     key: "suspend",
@@ -69,23 +77,23 @@ const decisionGuide = [
     icon: Ban,
     tone: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300",
     description:
-      "A utiliser si le signalement est fonde. L'annonce passe en suspendue, le signalement est cloture et le proprietaire recoit le motif.",
+      "À utiliser si le signalement est fondé. L'annonce passe en suspendue, le signalement est clôturé et le propriétaire reçoit le motif.",
   },
   {
     key: "treat",
-    title: "Traite sans sanction",
+    title: "Traité sans sanction",
     icon: CheckCircle,
     tone: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
     description:
-      "A utiliser si l'admin a verifie le cas mais qu'aucune sanction n'est necessaire. L'annonce reste dans son etat actuel.",
+      "À utiliser si l'admin a vérifié le cas mais qu'aucune sanction n'est nécessaire. L'annonce reste dans son état actuel.",
   },
   {
     key: "reject",
-    title: "Non fonde",
+    title: "Non fondé",
     icon: XCircle,
     tone: "bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-300",
     description:
-      "A utiliser si le signalement est incorrect, abusif ou sans preuves suffisantes. Le dossier est ferme sans action sur l'annonce.",
+      "À utiliser si le signalement est incorrect, abusif ou sans preuves suffisantes. Le dossier est fermé sans action sur l'annonce.",
   },
 ];
 
@@ -169,7 +177,7 @@ function SignalementRow({ signalement, onOpen }) {
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-medium ${annonceStatusClass}`}
             >
-              Annonce {signalement.annonceStatut}
+              Annonce {annonceStatusLabels[signalement.annonceStatut] || signalement.annonceStatut}
             </span>
           )}
         </div>
@@ -177,7 +185,7 @@ function SignalementRow({ signalement, onOpen }) {
           {signalement.annonceTitre || "Annonce introuvable"}
         </h3>
         <p className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">
-          {signalement.raison || "Motif non precise"} -{" "}
+          {signalement.raison || "Motif non précisé"} -{" "}
           {signalement.etudiantPrenom} {signalement.etudiantNom} -{" "}
           {formatDate(signalement.createdAt)}
         </p>
@@ -207,8 +215,8 @@ function DetailModal({
     setPhotoIndex(0);
     setReason(
       signalement?.raison
-        ? `Signalement confirme: ${signalement.raison}`
-        : "Signalement confirme par l'equipe de moderation.",
+        ? `Signalement confirmé : ${signalement.raison}`
+        : "Signalement confirmé par l'équipe de modération.",
     );
   }, [signalement]);
 
@@ -241,7 +249,7 @@ function DetailModal({
                 <span
                   className={`rounded-full px-2.5 py-1 text-xs font-medium ${annonceStatusClass}`}
                 >
-                  Annonce {signalement.annonceStatut}
+                  Annonce {annonceStatusLabels[signalement.annonceStatut] || signalement.annonceStatut}
                 </span>
               )}
             </div>
@@ -249,7 +257,7 @@ function DetailModal({
               {signalement.annonceTitre || "Annonce introuvable"}
             </h2>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Signale le {formatDate(signalement.createdAt)}
+              Signalé le {formatDate(signalement.createdAt)}
             </p>
           </div>
           <div className="flex flex-shrink-0 items-start gap-2">
@@ -269,7 +277,7 @@ function DetailModal({
                   disabled={submitting}
                   className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                 >
-                  <CheckCircle className="h-3.5 w-3.5" /> Traite
+                  <CheckCircle className="h-3.5 w-3.5" /> Traité
                 </button>
                 <button
                   type="button"
@@ -277,7 +285,7 @@ function DetailModal({
                   disabled={submitting}
                   className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-white/20 dark:text-gray-300 dark:hover:bg-white/5"
                 >
-                  <XCircle className="h-3.5 w-3.5" /> Non fonde
+                  <XCircle className="h-3.5 w-3.5" /> Non fondé
                 </button>
               </div>
             )}
@@ -356,10 +364,10 @@ function DetailModal({
                   <Flag className="h-4 w-4" /> Signalement
                 </p>
                 <p className="text-sm text-gray-700 dark:text-gray-200">
-                  Motif: <strong>{signalement.raison || "Non precise"}</strong>
+                  Motif : <strong>{signalement.raison || "Non précisé"}</strong>
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-                  {signalement.description || "Aucune description ajoutee."}
+                  {signalement.description || "Aucune description ajoutée."}
                 </p>
               </div>
 
@@ -371,7 +379,7 @@ function DetailModal({
                   <p className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-gray-400" />{" "}
                     {signalement.annonceVille || "-"} -{" "}
-                    {signalement.annonceAdresse || "Adresse non renseignee"}
+                    {signalement.annonceAdresse || "Adresse non renseignée"}
                   </p>
                   <p className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-gray-400" />{" "}
@@ -390,19 +398,19 @@ function DetailModal({
               <div className="space-y-4">
                 <div>
                   <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    <User className="h-3.5 w-3.5" /> Etudiant
+                    <User className="h-3.5 w-3.5" /> Étudiant
                   </p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {signalement.etudiantPrenom} {signalement.etudiantNom}
                   </p>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                     <Mail className="h-3.5 w-3.5" />{" "}
-                    {signalement.etudiantEmail || "Email indisponible"}
+                    {signalement.etudiantEmail || "E-mail indisponible"}
                   </p>
                 </div>
                 <div className="border-t border-gray-200 pt-4 dark:border-white/10">
                   <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    <User className="h-3.5 w-3.5" /> Proprietaire
+                    <User className="h-3.5 w-3.5" /> Propriétaire
                   </p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {signalement.proprietairePrenom || ""}{" "}
@@ -410,12 +418,12 @@ function DetailModal({
                   </p>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                     <Mail className="h-3.5 w-3.5" />{" "}
-                    {signalement.proprietaireEmail || "Email indisponible"}
+                    {signalement.proprietaireEmail || "E-mail indisponible"}
                   </p>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                     <Phone className="h-3.5 w-3.5" />{" "}
                     {signalement.proprietaireTelephone ||
-                      "Telephone indisponible"}
+                      "Téléphone indisponible"}
                   </p>
                 </div>
               </div>
@@ -424,7 +432,7 @@ function DetailModal({
             {isOpen ? (
               <div className="rounded-2xl border border-gray-200 p-4 dark:border-white/10">
                 <p className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
-                  Decision admin
+                  Décision admin
                 </p>
                 <div className="mb-4 rounded-2xl border border-primary-100 bg-primary-50/60 p-3 dark:border-primary-500/20 dark:bg-primary-500/10">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300">
@@ -453,7 +461,7 @@ function DetailModal({
                     disabled={submitting}
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                   >
-                    <CheckCircle className="h-4 w-4" /> Traite sans sanction
+                    <CheckCircle className="h-4 w-4" /> Traité sans sanction
                   </button>
                   <button
                     type="button"
@@ -461,13 +469,13 @@ function DetailModal({
                     disabled={submitting}
                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-white/20 dark:text-gray-300 dark:hover:bg-white/5"
                   >
-                    <XCircle className="h-4 w-4" /> Rejeter comme non fonde
+                    <XCircle className="h-4 w-4" /> Rejeter comme non fondé
                   </button>
                 </div>
               </div>
             ) : (
               <div className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500 dark:bg-white/5 dark:text-gray-400">
-                Ce signalement est deja cloture.
+                Ce signalement est déjà clôturé.
               </div>
             )}
           </aside>
@@ -488,7 +496,7 @@ function DetailModal({
               disabled={submitting}
               className="flex-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
             >
-              Traite
+              Traité
             </button>
             <button
               type="button"
@@ -496,7 +504,7 @@ function DetailModal({
               disabled={submitting}
               className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 disabled:opacity-50 dark:border-white/20 dark:text-gray-300"
             >
-              Non fonde
+              Non fondé
             </button>
           </div>
         )}
@@ -606,7 +614,7 @@ export default function AdminSignalements({ isDark, onToggleTheme }) {
         </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           {counts.OUVERT} signalement(s) ouvert(s). Cliquez une ligne pour voir
-          photos, contacts et decisions.
+          photos, contacts et décisions.
         </p>
       </div>
 
@@ -626,11 +634,11 @@ export default function AdminSignalements({ isDark, onToggleTheme }) {
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
             <h2 className="font-display text-sm font-bold text-gray-900 dark:text-white">
-              Guide de decision
+              Guide de décision
             </h2>
             <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-              Petit rappel pour garder une moderation juste entre etudiants et
-              proprietaires.
+              Petit rappel pour garder une modération juste entre étudiants et
+              propriétaires.
             </p>
           </div>
           <Shield className="hidden h-5 w-5 text-primary-500 sm:block" />
@@ -655,7 +663,7 @@ export default function AdminSignalements({ isDark, onToggleTheme }) {
             <div className="glass-light rounded-2xl p-12 text-center">
               <CheckCircle className="mx-auto mb-3 h-12 w-12 text-emerald-500" />
               <p className="text-gray-500 dark:text-gray-400">
-                Aucun signalement dans cette categorie
+                Aucun signalement dans cette catégorie
               </p>
             </div>
           )}

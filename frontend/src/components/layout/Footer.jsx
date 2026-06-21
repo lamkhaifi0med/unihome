@@ -29,7 +29,7 @@ export default function Footer() {
             </p>
 
             <div className="mt-6 grid max-w-xl gap-3 sm:grid-cols-3">
-              <FooterSignal icon={Search} label="Campus first" />
+              <FooterSignal icon={Search} label="Campus d'abord" />
               <FooterSignal icon={ShieldCheck} label="Annonces contrôlées" />
               <FooterSignal icon={MapPin} label="Maroc" />
             </div>

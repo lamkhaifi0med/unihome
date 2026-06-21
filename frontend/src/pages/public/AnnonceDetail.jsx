@@ -13,11 +13,13 @@ import {
   MapPin,
   MessageCircle,
   Phone,
+  Send,
   Shield,
   Star,
 } from "lucide-react";
 import ScoreBadge from "../../components/ui/ScoreBadge";
 import { annoncesApi } from "../../api/annoncesApi";
+import { avisApi } from "../../api/avisApi";
 import { signalerAnnonce } from "../../api/adminApi";
 import { useFavoris } from "../../hooks/useFavoris";
 import { useAuth } from "../../hooks/useAuth";
@@ -72,6 +74,253 @@ function MiniMap({ annonce }) {
   );
 }
 
+function StarsDisplay({ value, size = "h-4 w-4" }) {
+  const safe = Math.max(0, Math.min(5, Number(value) || 0));
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={`${size} ${
+            n <= safe
+              ? "fill-current text-amber-400"
+              : "text-slate-300 dark:text-white/20"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function formatAvisDate(iso) {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return "";
+  }
+}
+
+function AvisSection({
+  avisList,
+  avisLoading,
+  eligibilite,
+  isLoggedIn,
+  user,
+  annonce,
+  formOpen,
+  onOpenForm,
+  onCloseForm,
+  note,
+  setNote,
+  hover,
+  setHover,
+  commentaire,
+  setCommentaire,
+  submitting,
+  error,
+  onSubmit,
+}) {
+  const moyenne = annonce?.proprietaireNote;
+  const isStudent = user?.role === "ETUDIANT";
+  const canReview = Boolean(eligibilite?.canReview);
+  const alreadyReviewed = Boolean(eligibilite?.alreadyReviewed);
+  const hasViewedContacts = Boolean(eligibilite?.hasViewedContacts);
+
+  let hint = null;
+  if (!isLoggedIn) {
+    hint = "Connectez-vous avec un compte étudiant pour laisser un avis.";
+  } else if (!isStudent) {
+    hint = "Seuls les étudiants peuvent laisser un avis sur une annonce.";
+  } else if (alreadyReviewed) {
+    hint = "Vous avez déjà laissé un avis pour cette annonce. Merci !";
+  } else if (!hasViewedContacts) {
+    hint =
+      "Affichez d'abord les contacts du propriétaire pour pouvoir laisser un avis.";
+  }
+
+  return (
+    <section className="mt-6 rounded-[32px] border border-white/80 bg-white/80 p-6 shadow-xl shadow-indigo-950/8 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="font-display text-lg font-bold text-slate-950 dark:text-white">
+            Avis des étudiants ({avisList.length})
+          </h2>
+          {moyenne != null && Number(moyenne) > 0 && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <StarsDisplay value={Math.round(Number(moyenne))} />
+              <span className="font-semibold text-slate-700 dark:text-gray-200">
+                {Number(moyenne).toFixed(1)}/5
+              </span>
+              <span>· {annonce.proprietaireAvis || 0} avis au total</span>
+            </div>
+          )}
+        </div>
+        {canReview && !formOpen && (
+          <button
+            type="button"
+            onClick={onOpenForm}
+            className="btn-primary inline-flex items-center justify-center gap-2"
+          >
+            <Star className="h-4 w-4" />
+            Laisser un avis
+          </button>
+        )}
+      </div>
+
+      {hint && !formOpen && (
+        <p className="mt-4 rounded-2xl border border-slate-200/70 bg-slate-50/80 px-4 py-3 text-sm text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300">
+          {hint}
+        </p>
+      )}
+
+      {formOpen && (
+        <div className="mt-5 rounded-3xl border border-indigo-100 bg-indigo-50/60 p-5 dark:border-indigo-500/20 dark:bg-indigo-500/5">
+          <h3 className="font-display text-base font-bold text-slate-950 dark:text-white">
+            Votre avis sur cette annonce
+          </h3>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Soyez honnête et respectueux. Votre note aide d'autres étudiants.
+          </p>
+
+          <div className="mt-4">
+            <label className="text-xs font-semibold uppercase text-slate-500">
+              Note
+            </label>
+            <div className="mt-2 flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onMouseEnter={() => setHover(n)}
+                  onMouseLeave={() => setHover(0)}
+                  onClick={() => setNote(n)}
+                  className="rounded-full p-1 transition-transform hover:scale-110"
+                  aria-label={`Note ${n} sur 5`}
+                >
+                  <Star
+                    className={`h-7 w-7 ${
+                      n <= (hover || note)
+                        ? "fill-current text-amber-400"
+                        : "text-slate-300 dark:text-white/20"
+                    }`}
+                  />
+                </button>
+              ))}
+              <span className="ml-3 text-sm font-semibold text-slate-700 dark:text-gray-200">
+                {note}/5
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label
+              htmlFor="avis-commentaire"
+              className="text-xs font-semibold uppercase text-slate-500"
+            >
+              Commentaire (optionnel)
+            </label>
+            <textarea
+              id="avis-commentaire"
+              value={commentaire}
+              onChange={(e) => setCommentaire(e.target.value)}
+              maxLength={2000}
+              placeholder="Partagez votre expérience : accueil, état du logement, conformité à l'annonce, etc."
+              className="input-field mt-2 h-28 resize-none"
+            />
+            <p className="mt-1 text-right text-xs text-gray-400">
+              {commentaire.length}/2000
+            </p>
+          </div>
+
+          {error && (
+            <p className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-5 flex gap-3">
+            <button
+              type="button"
+              onClick={onCloseForm}
+              disabled={submitting}
+              className="flex-1 rounded-2xl border border-gray-200 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-white/20 dark:text-gray-300 dark:hover:bg-white/5"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={submitting}
+              className="btn-primary inline-flex flex-1 items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Publier mon avis
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-6 space-y-3">
+        {avisLoading ? (
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Chargement des avis...
+          </div>
+        ) : avisList.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-slate-200 bg-white/40 px-4 py-6 text-center text-sm text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
+            Aucun avis pour le moment. Soyez le premier à partager votre
+            expérience !
+          </p>
+        ) : (
+          avisList.map((avis) => {
+            const initial = (avis.etudiantPrenom || "?")[0]?.toUpperCase();
+            const author = [avis.etudiantPrenom, avis.etudiantNomInitiale]
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <article
+                key={avis.id}
+                className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-sm dark:border-white/10 dark:bg-white/5"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600 font-display text-sm font-bold text-white">
+                    {initial}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <p className="font-semibold text-slate-900 dark:text-white">
+                        {author || "Étudiant"}
+                      </p>
+                      <StarsDisplay value={avis.note} />
+                      <span className="text-xs text-gray-400">
+                        {formatAvisDate(avis.createdAt)}
+                      </span>
+                    </div>
+                    {avis.commentaire && (
+                      <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                        {avis.commentaire}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          })
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function AnnonceDetail() {
   const { id } = useParams();
   const { isLoggedIn, user } = useAuth();
@@ -87,6 +336,17 @@ export default function AnnonceDetail() {
   const [signalerDesc, setSignalerDesc] = useState("");
   const [signalerSubmitting, setSignalerSubmitting] = useState(false);
   const [signalerDone, setSignalerDone] = useState(false);
+
+  // Avis (reviews)
+  const [avisList, setAvisList] = useState([]);
+  const [avisLoading, setAvisLoading] = useState(false);
+  const [eligibilite, setEligibilite] = useState(null);
+  const [avisFormOpen, setAvisFormOpen] = useState(false);
+  const [avisNote, setAvisNote] = useState(5);
+  const [avisHover, setAvisHover] = useState(0);
+  const [avisCommentaire, setAvisCommentaire] = useState("");
+  const [avisSubmitting, setAvisSubmitting] = useState(false);
+  const [avisError, setAvisError] = useState(null);
 
   const loadDetail = async (includeContacts = false) => {
     const response = await annoncesApi.getDetail(id, includeContacts);
@@ -113,6 +373,39 @@ export default function AnnonceDetail() {
     };
   }, [id]);
 
+  // Load reviews + eligibility whenever the annonce id (or login state) changes.
+  // Eligibility uses _silentAuth in the API client so a 401 (unauthenticated
+  // visitor) does not trigger a global logout.
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        setAvisLoading(true);
+        const listRes = await avisApi.getByAnnonce(id);
+        if (mounted) setAvisList(listRes.data || []);
+      } catch {
+        if (mounted) setAvisList([]);
+      } finally {
+        if (mounted) setAvisLoading(false);
+      }
+
+      if (!isLoggedIn) {
+        if (mounted) setEligibilite(null);
+        return;
+      }
+      try {
+        const eligRes = await avisApi.getEligibilite(id);
+        if (mounted) setEligibilite(eligRes.data);
+      } catch {
+        if (mounted) setEligibilite(null);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [id, isLoggedIn]);
+
   const images = annonce?.photos || [];
   const fav = annonce ? isFavori(annonce.id) || annonce.favori : false;
   const scoreRows = useMemo(() => {
@@ -134,7 +427,7 @@ export default function AnnonceDetail() {
       );
     } catch {
       setFavoriteError(
-        "Connectez-vous avec un compte etudiant pour sauvegarder cette annonce.",
+        "Connectez-vous avec un compte étudiant pour sauvegarder cette annonce.",
       );
     }
   };
@@ -142,7 +435,7 @@ export default function AnnonceDetail() {
   const handleSignaler = async () => {
     if (!isLoggedIn) {
       setError(
-        "Connectez-vous avec un compte etudiant pour signaler cette annonce.",
+        "Connectez-vous avec un compte étudiant pour signaler cette annonce.",
       );
       setSignalerOpen(false);
       return;
@@ -167,16 +460,67 @@ export default function AnnonceDetail() {
 
   const revealContacts = async () => {
     if (!isLoggedIn) {
-      setError("Connectez-vous pour voir les contacts du proprietaire.");
+      setError("Connectez-vous pour voir les contacts du propriétaire.");
       return;
     }
     try {
       setContactsLoading(true);
       await loadDetail(true);
+      // Viewing contacts unlocks the review form, so refresh eligibility.
+      try {
+        const eligRes = await avisApi.getEligibilite(id);
+        setEligibilite(eligRes.data);
+      } catch {
+        /* ignore */
+      }
     } catch {
       setError("Impossible de charger les contacts.");
     } finally {
       setContactsLoading(false);
+    }
+  };
+
+  const resetAvisForm = () => {
+    setAvisNote(5);
+    setAvisHover(0);
+    setAvisCommentaire("");
+    setAvisError(null);
+  };
+
+  const handleSubmitAvis = async () => {
+    if (!isLoggedIn) {
+      setAvisError(
+        "Connectez-vous avec un compte étudiant pour laisser un avis.",
+      );
+      return;
+    }
+    setAvisSubmitting(true);
+    setAvisError(null);
+    try {
+      await avisApi.create({
+        annonceId: id,
+        note: Number(avisNote),
+        commentaire: avisCommentaire.trim() || null,
+      });
+      // Refresh the public list, the eligibility, and the annonce detail
+      // (so the owner's nbAvis / proprietaireNote update on screen).
+      const [listRes, eligRes] = await Promise.all([
+        avisApi.getByAnnonce(id),
+        avisApi.getEligibilite(id),
+      ]);
+      setAvisList(listRes.data || []);
+      setEligibilite(eligRes.data);
+      await loadDetail(annonce?.contactsDisponibles === true);
+      setAvisFormOpen(false);
+      resetAvisForm();
+    } catch (err) {
+      setAvisError(
+        err?.response?.data?.message ||
+          err?.response?.data?.detail ||
+          "Impossible d'enregistrer votre avis.",
+      );
+    } finally {
+      setAvisSubmitting(false);
     }
   };
 
@@ -360,6 +704,33 @@ export default function AnnonceDetail() {
               </div>
             </div>
           </section>
+
+          <AvisSection
+            avisList={avisList}
+            avisLoading={avisLoading}
+            eligibilite={eligibilite}
+            isLoggedIn={isLoggedIn}
+            user={user}
+            annonce={annonce}
+            formOpen={avisFormOpen}
+            onOpenForm={() => {
+              resetAvisForm();
+              setAvisFormOpen(true);
+            }}
+            onCloseForm={() => {
+              setAvisFormOpen(false);
+              resetAvisForm();
+            }}
+            note={avisNote}
+            setNote={setAvisNote}
+            hover={avisHover}
+            setHover={setAvisHover}
+            commentaire={avisCommentaire}
+            setCommentaire={setAvisCommentaire}
+            submitting={avisSubmitting}
+            error={avisError}
+            onSubmit={handleSubmitAvis}
+          />
         </main>
 
         <aside className="space-y-5">
@@ -431,13 +802,31 @@ export default function AnnonceDetail() {
               )}
             </div>
 
+            <div className="rounded-[32px] border border-indigo-100 bg-indigo-50/80 p-5 shadow-xl shadow-indigo-950/8 backdrop-blur-xl dark:border-indigo-500/20 dark:bg-indigo-500/10">
+              <h3 className="flex items-center gap-2 font-display font-bold text-slate-950 dark:text-white">
+                <MessageCircle className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
+                Assistant UniBot
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                Posez une question sur cette annonce : fiabilité, score, prix ou
+                points à vérifier avant contact.
+              </p>
+              <Link
+                to={`/chatbot?annonceId=${annonce.id}`}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Demander à UniBot
+              </Link>
+            </div>
+
             <div className="rounded-[32px] border border-white/80 bg-white/85 p-5 shadow-xl shadow-indigo-950/8 backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
               <h3 className="flex items-center gap-2 font-display font-bold text-slate-950 dark:text-white">
                 <Shield className="h-5 w-5 text-indigo-600" />
                 Analyse IA
               </h3>
               <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
-                {annonce.raisonStatut || "Annonce validee."}
+                {annonce.raisonStatut || "Annonce validée."}
               </p>
               <div className="mt-4 space-y-3">
                 {scoreRows.map((row) => (

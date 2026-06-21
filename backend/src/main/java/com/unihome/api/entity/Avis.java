@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -54,6 +55,11 @@ public class Avis {
     @Column(name = "valide_par_ia", nullable = false)
     private Boolean valideParIa;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    // @CreationTimestamp makes Hibernate populate the field at insert time
+    // using the JVM clock. The DB DEFAULT now() remains a safety net for
+    // direct SQL inserts, but Hibernate-managed inserts now always return
+    // a non-null createdAt to the caller without needing a re-fetch.
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

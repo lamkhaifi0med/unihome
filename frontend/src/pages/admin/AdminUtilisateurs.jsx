@@ -24,7 +24,7 @@ import { adminApi } from "../../api/adminApi";
 
 const sidebarLinks = [
   { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
-  { to: "/admin/moderation", label: "Moderation", icon: Shield },
+  { to: "/admin/moderation", label: "Modération", icon: Shield },
   { to: "/admin/signalements", label: "Signalements", icon: Flag },
   { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
 ];
@@ -35,6 +35,12 @@ const roleColors = {
   PROPRIETAIRE:
     "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400",
   ADMIN: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
+};
+
+const roleLabels = {
+  ETUDIANT: "Étudiant",
+  PROPRIETAIRE: "Propriétaire",
+  ADMIN: "Administrateur",
 };
 
 export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
@@ -109,7 +115,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
   const openCinResubmit = (user) => {
     setCinResubmitTarget(user);
     setCinResubmitReason(
-      "La photo CIN fournie n'est pas assez lisible. Merci de televerser une nouvelle photo claire, complete et sans flou.",
+      "La photo CIN fournie n'est pas assez lisible. Merci de téléverser une nouvelle photo claire, complète et sans flou.",
     );
   };
 
@@ -163,7 +169,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
               Gestion des Utilisateurs
             </h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-              {users.length} utilisateur(s) charges
+              {users.length} utilisateur(s) chargés
             </p>
           </div>
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 shadow-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
@@ -173,7 +179,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide opacity-80">
-                  CIN à verifier
+                  CIN à vérifier
                 </p>
                 <p className="text-lg font-bold">{pendingCinCount}</p>
               </div>
@@ -186,7 +192,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
-          placeholder="Rechercher par nom, prenom ou email..."
+          placeholder="Rechercher par nom, prénom ou e-mail..."
           value={search}
           onChange={handleSearch}
           className="input-field pl-11"
@@ -205,7 +211,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                 <tr>
                   {[
                     "Utilisateur",
-                    "Role",
+                    "Rôle",
                     "Statut",
                     "CIN",
                     "Inscription",
@@ -243,7 +249,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                       <span
                         className={`text-xs px-2.5 py-1 rounded-full font-medium ${roleColors[u.role] ?? ""}`}
                       >
-                        {u.role}
+                        {roleLabels[u.role] || u.role}
                       </span>
                     </td>
                     <td className="px-5 py-4">
@@ -269,7 +275,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                           ) : (
                             <CreditCard className="h-3.5 w-3.5" />
                           )}
-                          {u.estVerifieCin ? "CIN validee" : "Examiner CIN"}
+                          {u.estVerifieCin ? "CIN validée" : "Examiner CIN"}
                         </button>
                       ) : (
                         <span className="text-xs text-gray-400">—</span>
@@ -294,7 +300,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                             onClick={() => handleReactiver(u.id)}
                             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 transition-colors"
                           >
-                            <CheckCircle className="w-3 h-3" /> Reactiver
+                            <CheckCircle className="w-3 h-3" /> Réactiver
                           </button>
                         )}
                       </div>
@@ -307,7 +313,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                       colSpan={6}
                       className="px-5 py-8 text-center text-sm text-gray-400"
                     >
-                      Aucun utilisateur trouve
+                      Aucun utilisateur trouvé
                     </td>
                   </tr>
                 )}
@@ -330,15 +336,15 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
             <div className="relative flex items-start justify-between gap-4 border-b border-white/20 px-6 py-5 text-white">
               <div>
                 <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
-                  <Sparkles className="h-3.5 w-3.5" /> Verification visuelle
-                  proprietaire
+                  <Sparkles className="h-3.5 w-3.5" /> Vérification visuelle
+                  propriétaire
                 </div>
                 <h2 className="font-display text-2xl font-bold">
                   Validation CIN
                 </h2>
                 <p className="text-sm text-white/75">
-                  Comparez le numero saisi avec la photo avant de confirmer le
-                  badge proprietaire verifie.
+                  Comparez le numéro saisi avec la photo avant de confirmer le
+                  badge propriétaire vérifié.
                 </p>
               </div>
               <button
@@ -395,7 +401,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                         Aucune photo CIN disponible
                       </p>
                       <p className="mt-1 text-sm opacity-80">
-                        Demandez au proprietaire de reteleverser une image
+                        Demandez au propriétaire de téléverser à nouveau une image
                         lisible.
                       </p>
                     </div>
@@ -424,13 +430,13 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
 
                 <div className="rounded-3xl border border-primary-200 bg-primary-50 p-5 dark:border-primary-500/25 dark:bg-primary-500/10">
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary-700 dark:text-primary-300">
-                    Numero CIN saisi
+                    Numéro CIN saisi
                   </p>
                   <div className="rounded-2xl border border-primary-200 bg-white px-4 py-4 font-mono text-2xl font-black tracking-[0.22em] text-gray-950 shadow-sm dark:border-primary-500/25 dark:bg-white/10 dark:text-white">
                     {selectedCinUser.numeroCin || "—"}
                   </div>
                   <p className="mt-3 text-xs leading-relaxed text-primary-700/75 dark:text-primary-200/75">
-                    Le numero ci-dessus vient du formulaire proprietaire. Il
+                    Le numéro ci-dessus vient du formulaire propriétaire. Il
                     doit correspondre visuellement au document uploadé.
                   </p>
                 </div>
@@ -442,8 +448,8 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                   <div className="space-y-3">
                     {[
                       "Photo nette et complète",
-                      "Numero CIN identique au champ saisi",
-                      "Nom/prenom coherent avec le compte",
+                      "Numéro CIN identique au champ saisi",
+                      "Nom/prénom cohérent avec le compte",
                       "Aucun signe évident de modification",
                     ].map((item) => (
                       <div
@@ -471,13 +477,13 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                     <div>
                       <p className="text-sm font-bold text-gray-900 dark:text-white">
                         {selectedCinUser.estVerifieCin
-                          ? "CIN deja validee"
+                          ? "CIN déjà validée"
                           : "Validation manuelle requise"}
                       </p>
                       <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-300">
                         {selectedCinUser.estVerifieCin
-                          ? "Ce proprietaire possede deja le badge CIN verifiee."
-                          : "Cliquez uniquement apres comparaison visuelle du numero et de la photo."}
+                          ? "Ce propriétaire possède déjà le badge CIN vérifié."
+                          : "Cliquez uniquement après comparaison visuelle du numéro et de la photo."}
                       </p>
                     </div>
                   </div>
@@ -500,8 +506,8 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                     <BadgeCheck className="h-5 w-5" />
                   )}
                   {selectedCinUser.estVerifieCin
-                    ? "CIN deja verifiee"
-                    : "Confirmer et verifier CIN"}
+                    ? "CIN déjà vérifiée"
+                    : "Confirmer et vérifier CIN"}
                 </button>
 
                 {!selectedCinUser.estVerifieCin && (
@@ -533,7 +539,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                   Demander un nouveau CIN
                 </h3>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Le proprietaire recevra un email et pourra televerser une
+                  Le propriétaire recevra un e-mail et pourra téléverser une
                   photo plus lisible depuis son profil.
                 </p>
               </div>
@@ -546,7 +552,7 @@ export default function AdminUtilisateurs({ isDark, onToggleTheme }) {
                 value={cinResubmitReason}
                 onChange={(event) => setCinResubmitReason(event.target.value)}
                 className="input-field mb-4 h-28 resize-none text-sm"
-                placeholder="Expliquez ce que le proprietaire doit corriger..."
+                placeholder="Expliquez ce que le propriétaire doit corriger..."
               />
               <div className="flex gap-3">
                 <button

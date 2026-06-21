@@ -1,62 +1,102 @@
-import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Sparkles, RotateCcw } from 'lucide-react'
-import { chatbotFaq } from '../../data/mockData'
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import {
+  Home,
+  Image as ImageIcon,
+  MapPin,
+  Sparkles,
+  WalletCards,
+} from "lucide-react";
+import ChatbotPanel from "../../components/chatbot/ChatbotPanel";
+import { ownerApi } from "../../api/ownerApi";
+import { useAuth } from "../../hooks/useAuth";
 
-const initialMessages = [
-  {
-    id: 1,
-    role: 'bot',
-    text: 'Bonjour ! Je suis l\'assistant UniHome 🏠 Je peux vous aider à trouver un logement, comprendre le score de confiance, ou répondre à vos questions sur la plateforme. Comment puis-je vous aider ?',
-    time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-  }
-]
-
-const quickReplies = [
-  'Comment fonctionne le score de confiance ?',
-  'Comment signaler une annonce ?',
-  'Comment publier une annonce ?',
-  'Le service est-il gratuit ?',
-]
+const ownerStatusLabels = {
+  VALIDEE: "Publiée",
+  EN_ATTENTE: "En vérification",
+  REJETEE: "Rejetée",
+  SUSPENDUE: "Suspendue",
+  ARCHIVEE: "Archivée",
+};
 
 export default function Chatbot() {
-  const [messages, setMessages] = useState(initialMessages)
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const bottomRef = useRef(null)
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [selectedOwnerAnnonce, setSelectedOwnerAnnonce] = useState(null);
+  const [ownerAnnonceLoading, setOwnerAnnonceLoading] = useState(false);
+  const currentAnnonceId = searchParams.get("annonceId");
+  const ownerAnnonceId = searchParams.get("ownerAnnonceId");
+  const ownerAnnonceTitle = searchParams.get("ownerAnnonceTitle");
+  const ownerAnnonceStatus = searchParams.get("ownerAnnonceStatus");
+  const ownerAnnonceCity = searchParams.get("ownerAnnonceCity");
+  const ownerAnnonceType = searchParams.get("ownerAnnonceType");
+  const ownerAnnonceRent = searchParams.get("ownerAnnonceRent");
+  const ownerAnnoncePhoto = searchParams.get("ownerAnnoncePhoto");
+  const intentHint = searchParams.get("intent");
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    if (!ownerAnnonceId || !user?.id || user?.role !== "PROPRIETAIRE") {
+      setSelectedOwnerAnnonce(null);
+      return;
+    }
 
-  const getBotResponse = (text) => {
-    const lower = text.toLowerCase()
-    const match = chatbotFaq.find(f =>
-      lower.includes('score') && f.question.includes('score') ||
-      lower.includes('signaler') && f.question.includes('signaler') ||
-      lower.includes('publier') && f.question.includes('publier') ||
-      lower.includes('gratuit') && f.question.includes('gratuit')
-    )
-    if (match) return match.answer
-    if (lower.includes('bonjour') || lower.includes('salut')) return 'Bonjour ! Ravi de vous accueillir sur UniHome. Comment puis-je vous aider aujourd\'hui ?'
-    if (lower.includes('merci')) return 'Avec plaisir ! N\'hésitez pas si vous avez d\'autres questions 😊'
-    if (lower.includes('logement') || lower.includes('appartement') || lower.includes('studio')) return 'Pour trouver un logement, utilisez la barre de recherche en haut de la page. Vous pouvez filtrer par ville, université, budget et type de logement. Nos annonces sont triées par score de confiance !'
-    return 'Je n\'ai pas bien compris votre question. Vous pouvez me demander des infos sur le score de confiance, comment signaler une annonce, ou comment publier votre logement. Posez une question précise !'
-  }
+    let mounted = true;
+    setOwnerAnnonceLoading(true);
+    ownerApi
+      .getOwnerAnnonces(user.id)
+      .then((response) => {
+        if (!mounted) return;
+        const match = (response.data || []).find(
+          (annonce) => annonce.id === ownerAnnonceId,
+        );
+        setSelectedOwnerAnnonce(match || null);
+      })
+      .catch(() => {
+        if (mounted) setSelectedOwnerAnnonce(null);
+      })
+      .finally(() => {
+        if (mounted) setOwnerAnnonceLoading(false);
+      });
 
-  const sendMessage = (text) => {
-    const msg = text || input.trim()
-    if (!msg) return
-    const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    setMessages(prev => [...prev, { id: Date.now(), role: 'user', text: msg, time }])
-    setInput('')
-    setLoading(true)
-    setTimeout(() => {
-      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', text: getBotResponse(msg), time }])
-      setLoading(false)
-    }, 900)
-  }
+    return () => {
+      mounted = false;
+    };
+  }, [ownerAnnonceId, user?.id, user?.role]);
 
-  const reset = () => setMessages(initialMessages)
+  const ownerAnnonceContext = useMemo(() => {
+    if (!ownerAnnonceId) return null;
+    const source = selectedOwnerAnnonce || {};
+    return {
+      title: source.titre || ownerAnnonceTitle || "Annonce sélectionnée",
+      status: source.statut || ownerAnnonceStatus || null,
+      city: source.ville || ownerAnnonceCity || null,
+      type: source.typeLogement || ownerAnnonceType || null,
+      rent:
+        source.loyer !== null && source.loyer !== undefined
+          ? source.loyer
+          : ownerAnnonceRent,
+      photo: source.photos?.[0] || ownerAnnoncePhoto || null,
+      surface: source.superficie || null,
+      score: source.scoreConfiance ?? null,
+    };
+  }, [
+    ownerAnnonceId,
+    selectedOwnerAnnonce,
+    ownerAnnonceTitle,
+    ownerAnnonceStatus,
+    ownerAnnonceCity,
+    ownerAnnonceType,
+    ownerAnnonceRent,
+    ownerAnnoncePhoto,
+  ]);
+
+  const ownerAnnonceLabel = ownerAnnonceContext?.title || null;
+  const formattedOwnerRent = ownerAnnonceContext?.rent
+    ? `${Number(ownerAnnonceContext.rent).toLocaleString("fr-FR")} DH/mois`
+    : null;
+  const ownerContextMessage = ownerAnnonceId
+    ? `Mode propriétaire actif. Je réponds sur « ${ownerAnnonceLabel} ». Vous pouvez me demander pourquoi elle est en attente/rejetée, comment améliorer son score ou quelles informations ajouter.`
+    : null;
 
   return (
     <div className="page-container py-8 max-w-3xl">
@@ -66,81 +106,133 @@ export default function Chatbot() {
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white">Assistant UniHome</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Propulsé par Gemini · Disponible 24h/24</p>
+            <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white">
+              Assistant UniHome
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Propulsé par Gemini · Disponible 24h/24
+            </p>
+            {currentAnnonceId && (
+              <p className="mt-1 text-xs font-semibold text-primary-600 dark:text-primary-300">
+                Contexte annonce actif · UniBot peut répondre sur cette annonce.
+              </p>
+            )}
+            {intentHint === "owner-dashboard" && (
+              <p className="mt-1 text-xs font-semibold text-primary-600 dark:text-primary-300">
+                Mode propriétaire actif · UniBot peut aider sur{" "}
+                {ownerAnnonceId ? "cette annonce" : "vos annonces"}.
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="glass-light rounded-3xl overflow-hidden shadow-xl flex flex-col" style={{ height: '65vh' }}>
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.map(msg => (
-            <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${msg.role === 'bot' ? 'bg-gradient-to-br from-primary-500 to-accent-600' : 'bg-gray-200 dark:bg-white/10'}`}>
-                {msg.role === 'bot' ? <Bot className="w-4 h-4 text-white" /> : <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />}
-              </div>
-              <div className={`max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === 'bot'
-                  ? 'bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 rounded-tl-sm'
-                  : 'bg-gradient-to-br from-primary-600 to-accent-600 text-white rounded-tr-sm'
-                }`}>
-                  {msg.text}
+      {ownerAnnonceContext && (
+        <div className="mb-5 overflow-hidden rounded-[34px] border border-primary-200 bg-white shadow-2xl shadow-primary-950/10 dark:border-primary-500/20 dark:bg-slate-950/80">
+          <div className="grid gap-0 sm:grid-cols-[240px_1fr]">
+            <div className="relative min-h-[190px] overflow-hidden bg-gradient-to-br from-slate-200 via-primary-100 to-accent-100 dark:from-slate-800 dark:via-primary-950/60 dark:to-accent-950/60">
+              {ownerAnnonceContext.photo ? (
+                <img
+                  src={ownerAnnonceContext.photo}
+                  alt={ownerAnnonceLabel}
+                  className="h-full min-h-[190px] w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full min-h-[190px] w-full flex-col items-center justify-center gap-3 text-primary-500 dark:text-primary-200">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/70 shadow-lg dark:bg-white/10">
+                    {ownerAnnonceLoading ? (
+                      <Sparkles className="h-8 w-8 animate-pulse" />
+                    ) : (
+                      <ImageIcon className="h-8 w-8" />
+                    )}
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-wide">
+                    {ownerAnnonceLoading
+                      ? "Chargement de l'annonce"
+                      : "Photo non disponible"}
+                  </span>
                 </div>
-                <span className="text-xs text-gray-400">{msg.time}</span>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-primary-700 shadow-lg dark:bg-slate-950/90 dark:text-primary-200">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Annonce ciblée par UniBot
+                </span>
               </div>
-            </div>
-          ))}
-          {loading && (
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-accent-600 flex items-center justify-center">
-                <Bot className="w-4 h-4 text-white" />
-              </div>
-              <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-white dark:bg-white/10 border border-gray-200 dark:border-white/10">
-                <div className="flex gap-1.5 items-center">
-                  <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+              {formattedOwnerRent && (
+                <div className="absolute right-3 top-3 rounded-2xl bg-white/95 px-3 py-2 text-sm font-black text-slate-950 shadow-lg dark:bg-slate-950/90 dark:text-white">
+                  {formattedOwnerRent}
                 </div>
-              </div>
+              )}
             </div>
-          )}
-          <div ref={bottomRef} />
-        </div>
 
-        {/* Quick replies */}
-        {messages.length === 1 && (
-          <div className="px-6 pb-2 flex flex-wrap gap-2">
-            {quickReplies.map(q => (
-              <button key={q} onClick={() => sendMessage(q)} className="text-xs px-3 py-1.5 rounded-xl border border-primary-200 dark:border-primary-900/50 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors">
-                {q}
-              </button>
-            ))}
+            <div className="min-w-0 bg-gradient-to-br from-primary-50 via-white to-accent-50 p-6 dark:from-primary-500/10 dark:via-white/5 dark:to-accent-500/10">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-primary-600 dark:text-primary-300">
+                    UniBot répond sur cette annonce
+                  </p>
+                  <h2 className="mt-1 line-clamp-2 font-display text-2xl font-bold leading-snug text-gray-950 dark:text-white">
+                    {ownerAnnonceLabel}
+                  </h2>
+                </div>
+                <div className="hidden h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white text-primary-600 shadow-sm dark:bg-white/10 dark:text-primary-200 sm:flex">
+                  <Home className="h-5 w-5" />
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                {ownerAnnonceContext.status && (
+                  <span className="rounded-full bg-amber-100 px-3 py-1.5 text-amber-800 shadow-sm dark:bg-amber-500/15 dark:text-amber-200">
+                    {ownerStatusLabels[ownerAnnonceContext.status] ||
+                      ownerAnnonceContext.status}
+                  </span>
+                )}
+                {ownerAnnonceContext.city && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-3 py-1.5 shadow-sm dark:bg-white/10">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {ownerAnnonceContext.city}
+                  </span>
+                )}
+                {ownerAnnonceContext.type && (
+                  <span className="rounded-full bg-white/85 px-3 py-1.5 shadow-sm dark:bg-white/10">
+                    {ownerAnnonceContext.type}
+                  </span>
+                )}
+                {ownerAnnonceContext.surface && (
+                  <span className="rounded-full bg-white/85 px-3 py-1.5 shadow-sm dark:bg-white/10">
+                    {ownerAnnonceContext.surface} m²
+                  </span>
+                )}
+                {ownerAnnonceContext.score !== null && (
+                  <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-emerald-800 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-200">
+                    Score {ownerAnnonceContext.score}/100
+                  </span>
+                )}
+                {!ownerAnnonceContext.photo && formattedOwnerRent && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-3 py-1.5 shadow-sm dark:bg-white/10">
+                    <WalletCards className="h-3.5 w-3.5" />
+                    {formattedOwnerRent}
+                  </span>
+                )}
+              </div>
+
+              <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                UniBot répondra en priorité sur cette annonce : statut, score de
+                confiance, informations manquantes et améliorations possibles.
+              </p>
+            </div>
           </div>
-        )}
-
-        {/* Input */}
-        <div className="border-t border-gray-200 dark:border-white/10 p-4 flex gap-3 items-center">
-          <button onClick={reset} className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition-all flex-shrink-0">
-            <RotateCcw className="w-4 h-4" />
-          </button>
-          <input
-            type="text"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && sendMessage()}
-            placeholder="Posez votre question..."
-            className="flex-1 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
-          />
-          <button
-            onClick={() => sendMessage()}
-            disabled={!input.trim() || loading}
-            className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-accent-600 flex items-center justify-center text-white hover:from-primary-500 hover:to-accent-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-          >
-            <Send className="w-4 h-4" />
-          </button>
         </div>
-      </div>
+      )}
+
+      <ChatbotPanel
+        currentAnnonceId={currentAnnonceId}
+        ownerAnnonceId={ownerAnnonceId}
+        intentHint={intentHint}
+        initialContextMessage={ownerContextMessage}
+      />
     </div>
-  )
+  );
 }

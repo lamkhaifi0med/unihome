@@ -132,7 +132,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
       const response = await usersApi.updateMe(payload);
       const savedProfile = response.data || {};
       syncProfile(savedProfile);
-      setMessage({ type: "success", text: "Profil sauvegarde avec succes." });
+      setMessage({ type: "success", text: "Profil sauvegardé avec succès." });
     } catch (error) {
       setMessage({
         type: "error",
@@ -149,7 +149,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
     if (!cinFile) {
       setMessage({
         type: "error",
-        text: "Veuillez choisir une photo CIN avant de televerser.",
+        text: "Veuillez choisir une photo CIN avant de téléverser.",
       });
       return;
     }
@@ -166,14 +166,14 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
       setCinFile(null);
       setMessage({
         type: "success",
-        text: "Nouvelle photo CIN envoyee. Votre verification repasse en attente de controle admin.",
+        text: "Nouvelle photo CIN envoyée. Votre vérification repasse en attente de contrôle admin.",
       });
     } catch (error) {
       setMessage({
         type: "error",
         text:
           error?.response?.data?.detail ||
-          "Impossible de televerser la nouvelle photo CIN.",
+          "Impossible de téléverser la nouvelle photo CIN.",
       });
     } finally {
       setUploadingCin(false);
@@ -195,7 +195,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
           Mon profil
         </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-          Completez vos informations pour renforcer la confiance autour de vos
+          Complétez vos informations pour renforcer la confiance autour de vos
           annonces.
         </p>
       </div>
@@ -209,7 +209,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
             <div className="min-w-0">
               <h2 className="font-display font-bold text-gray-900 dark:text-white truncate">
                 {[form.prenom, form.nom].filter(Boolean).join(" ") ||
-                  "Proprietaire"}
+                  "Propriétaire"}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                 {form.email}
@@ -220,7 +220,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
           <div className="mt-6 rounded-2xl bg-white/70 dark:bg-white/5 border border-gray-100 dark:border-white/10 p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                Profil complete
+                Profil complété
               </span>
               <span className="text-sm font-bold text-primary-600 dark:text-primary-300">
                 {completion}%
@@ -233,7 +233,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
               />
             </div>
             <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-              Nom, telephone et CIN rendent le profil exploitable pour la
+              Nom, téléphone et CIN rendent le profil exploitable pour la
               validation et le support.
             </p>
           </div>
@@ -247,12 +247,12 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
               )}
               <div>
                 <p className="text-sm font-semibold">
-                  {form.estVerifieCin ? "CIN verifiee" : "CIN en verification"}
+                  {form.estVerifieCin ? "CIN vérifiée" : "CIN en vérification"}
                 </p>
                 <p className="text-xs mt-1 opacity-90">
                   {form.numeroCin
-                    ? `Reference: ${form.numeroCin}`
-                    : "Aucune reference CIN trouvee sur votre profil."}
+                    ? `Référence : ${form.numeroCin}`
+                    : "Aucune référence CIN trouvée sur votre profil."}
                 </p>
               </div>
             </div>
@@ -270,10 +270,10 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
               <div className="flex items-start justify-between gap-4 pb-5 border-b border-gray-100 dark:border-white/10">
                 <div>
                   <h3 className="font-display font-semibold text-lg text-gray-900 dark:text-white">
-                    Informations proprietaire
+                    Informations propriétaire
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Les informations sensibles restent verrouillees apres
+                    Les informations sensibles restent verrouillées après
                     inscription.
                   </p>
                 </div>
@@ -311,7 +311,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Prenom
+                    Prénom
                   </label>
                   <input
                     type="text"
@@ -336,7 +336,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Email
+                    Adresse e-mail
                   </label>
                   <input
                     type="email"
@@ -347,7 +347,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Telephone
+                    Téléphone
                   </label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -366,10 +366,10 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
                 <div className="rounded-2xl border border-gray-100 dark:border-white/10 bg-white/70 dark:bg-white/5 p-4">
                   <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-medium mb-2">
                     <FileCheck2 className="w-4 h-4" />
-                    Numero CIN
+                    Numéro CIN
                   </div>
                   <p className="font-semibold text-gray-900 dark:text-white">
-                    {form.numeroCin || "Non renseigne"}
+                    {form.numeroCin || "Non renseigné"}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-gray-100 dark:border-white/10 bg-white/70 dark:bg-white/5 p-4">
@@ -378,13 +378,13 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
                     Statut CIN
                   </div>
                   <p className="font-semibold text-gray-900 dark:text-white">
-                    {form.estVerifieCin ? "Validee" : "En attente"}
+                    {form.estVerifieCin ? "Validée" : "En attente"}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-gray-100 dark:border-white/10 bg-white/70 dark:bg-white/5 p-4">
                   <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-medium mb-2">
                     <Star className="w-4 h-4" />
-                    Reputation
+                    Réputation
                   </div>
                   <p className="font-semibold text-gray-900 dark:text-white">
                     {form.noteMoyenne ?? "-"} / 5
@@ -407,9 +407,9 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
                       </h4>
                       <p className="mt-1 max-w-2xl text-sm leading-relaxed text-gray-600 dark:text-gray-300">
                         Si l'admin vous demande une photo plus claire,
-                        choisissez une image nette, complete et sans reflet.
+                        choisissez une image nette, complète et sans reflet.
                         L'envoi remettra automatiquement votre CIN en attente de
-                        verification.
+                        vérification.
                       </p>
                       {form.photoCinUrl && (
                         <a
@@ -454,7 +454,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
                       ) : (
                         <UploadCloud className="h-4 w-4" />
                       )}
-                      Televerser la nouvelle photo
+                      Téléverser la nouvelle photo
                     </button>
                   </div>
                 </div>

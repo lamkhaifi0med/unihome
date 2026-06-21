@@ -67,7 +67,7 @@ function FavoriteCard({ annonce, onRemove }) {
           type="button"
           onClick={() => onRemove(annonce.id)}
           className="absolute right-3 top-3 rounded-full bg-white p-2 text-pink-500 shadow-lg transition-transform hover:scale-105 dark:bg-slate-900"
-          aria-label="Retirer des favoris"
+          aria-label="Retirer de mes favoris"
         >
           <Heart className="h-4 w-4 fill-current" />
         </button>
@@ -171,8 +171,8 @@ export default function Favoris({ isDark, onToggleTheme }) {
             Mes favoris
           </h1>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {favsAnnonces.length} annonce{favsAnnonces.length !== 1 ? "s" : ""}{" "}
-            sauvegardée{favsAnnonces.length !== 1 ? "s" : ""}
+            {favsAnnonces.length} annonce{favsAnnonces.length > 1 ? "s" : ""}{" "}
+            sauvegardée{favsAnnonces.length > 1 ? "s" : ""}
           </p>
         </div>
         <Link to="/search" className="btn-primary w-fit">
@@ -192,7 +192,7 @@ export default function Favoris({ isDark, onToggleTheme }) {
             Aucun favori pour le moment
           </h3>
           <p className="mb-6 text-sm text-gray-400">
-            Sauvegardez des annonces depuis la recherche ou la page detail.
+            Sauvegardez des annonces depuis la recherche ou la page détail.
           </p>
           <Link to="/annonces" className="btn-primary">
             Explorer les annonces

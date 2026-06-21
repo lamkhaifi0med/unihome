@@ -200,15 +200,15 @@ function Navbar() {
 
         {/* Nav links */}
         <ul style={{ display:"flex", gap:34, listStyle:"none" }}>
-          {["Discover","How it Works","Map View","About"].map(l => (
+          {["Découvrir","Comment ça marche","Vue carte","À propos"].map(l => (
             <li key={l}><a href="#" className="nav-link">{l}</a></li>
           ))}
         </ul>
 
         {/* Buttons */}
         <div style={{ display:"flex", gap:10 }}>
-          <button className="btn-ghost">Log In / Sign Up</button>
-          <button className="btn-primary">List Your Property</button>
+          <button className="btn-ghost">Se connecter / S'inscrire</button>
+          <button className="btn-primary">Publier votre logement</button>
         </div>
       </div>
     </nav>
@@ -216,7 +216,7 @@ function Navbar() {
 }
 
 /* ─── Hero search bar ───────────────────────────────────────────── */
-const ROOM_TYPES = ["Studio","Shared Room","Apartment","Private Room"];
+const ROOM_TYPES = ["Studio","Chambre partagée","Appartement","Chambre privée"];
 
 function SearchBar() {
   const [where, setWhere]   = useState("");
@@ -240,9 +240,9 @@ function SearchBar() {
       <div className="search-field-wrap" style={{ padding:"13px 22px" }}>
         <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:5 }}>
           <svg width="13" height="13" fill={C.primary} viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
-          <span style={{ fontSize:10, fontWeight:700, color:C.text, textTransform:"uppercase", letterSpacing:"0.07em" }}>Where?</span>
+          <span style={{ fontSize:10, fontWeight:700, color:C.text, textTransform:"uppercase", letterSpacing:"0.07em" }}>Où ?</span>
         </div>
-        <input value={where} onChange={e=>setWhere(e.target.value)} placeholder="Campus or City"
+        <input value={where} onChange={e=>setWhere(e.target.value)} placeholder="Campus ou ville"
           style={{ border:"none", outline:"none", fontSize:13, color:C.muted, width:"100%", background:"transparent", fontFamily:"'Inter',sans-serif" }} />
       </div>
 
@@ -252,7 +252,7 @@ function SearchBar() {
       <div className="search-field-wrap" style={{ padding:"13px 22px" }}>
         <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:6 }}>
           <svg width="13" height="13" fill={C.primary} viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
-          <span style={{ fontSize:10, fontWeight:700, color:C.text, textTransform:"uppercase", letterSpacing:"0.07em" }}>How Much?</span>
+          <span style={{ fontSize:10, fontWeight:700, color:C.text, textTransform:"uppercase", letterSpacing:"0.07em" }}>Budget ?</span>
         </div>
         <input type="range" min={500} max={6000} step={100} value={budget}
           style={{"--p":`${pct}%`}} onChange={e=>setBudget(Number(e.target.value))} />
@@ -265,11 +265,11 @@ function SearchBar() {
       <div className="search-field-wrap" style={{ padding:"13px 22px" }}>
         <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:5 }}>
           <svg width="13" height="13" fill={C.primary} viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-          <span style={{ fontSize:10, fontWeight:700, color:C.text, textTransform:"uppercase", letterSpacing:"0.07em" }}>Type?</span>
+          <span style={{ fontSize:10, fontWeight:700, color:C.text, textTransform:"uppercase", letterSpacing:"0.07em" }}>Type ?</span>
         </div>
         <select value={type} onChange={e=>setType(e.target.value)}
           style={{ border:"none", outline:"none", fontSize:13, color:type?C.text:C.muted, background:"transparent", width:"100%", fontFamily:"'Inter',sans-serif", cursor:"pointer" }}>
-          <option value="">Any type</option>
+          <option value="">Tous les types</option>
           {ROOM_TYPES.map(t=><option key={t}>{t}</option>)}
         </select>
       </div>
@@ -277,7 +277,7 @@ function SearchBar() {
       {/* Discover btn */}
       <button className="btn-primary" style={{ margin:6, padding:"14px 26px", borderRadius:14, fontSize:15, display:"flex", alignItems:"center", gap:8 }}>
         <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Discover
+        Découvrir
       </button>
     </div>
   );
@@ -292,24 +292,24 @@ function Hero() {
       {/* Verified pill */}
       <div className="anim-badge" style={{ display:"inline-flex", alignItems:"center", gap:8, background:"rgba(255,255,255,0.11)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:999, padding:"7px 18px", color:"#c7d2fe", fontSize:13, fontWeight:600, marginBottom:22, backdropFilter:"blur(8px)", position:"relative" }}>
         <span style={{ width:8, height:8, borderRadius:"50%", background:"#34d399", display:"inline-block", animation:"pulse 2s ease infinite" }} />
-        99% Verified listings
+        99 % d’annonces vérifiées
       </div>
 
       {/* Heading */}
       <h1 className="anim-title" style={{ fontSize:"clamp(2.3rem,5.5vw,3.7rem)", fontWeight:900, color:"#fff", lineHeight:1.1, letterSpacing:"-2px", margin:"0 0 18px", position:"relative" }}>
-        Find Your Perfect<br />
-        <span style={{ color:"#a5b4fc" }}>Student Haven</span>
+        Trouvez votre logement<br />
+        <span style={{ color:"#a5b4fc" }}>étudiant idéal</span>
       </h1>
 
       <p className="anim-sub" style={{ fontSize:17, color:"rgba(199,210,254,0.78)", maxWidth:470, margin:"0 auto 46px", lineHeight:1.75, position:"relative" }}>
-        Thousands of verified student rooms across Morocco — near your campus, within your budget.
+        Des milliers de logements étudiants vérifiés au Maroc — proches de votre campus et adaptés à votre budget.
       </p>
 
       <div style={{ position:"relative" }}><SearchBar /></div>
 
       {/* Stat chips */}
       <div className="anim-stats" style={{ display:"flex", justifyContent:"center", gap:14, marginTop:34, position:"relative" }}>
-        {[["4,200+","Verified Listings"],["12","Cities"],["MAD 1,500","Avg. Price/mo"]].map(([n,l])=>(
+        {[["4 200+","Annonces vérifiées"],["12","Villes"],["1 500 MAD","Prix moyen/mois"]].map(([n,l])=>(
           <div key={l} style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.16)", borderRadius:14, padding:"11px 22px", backdropFilter:"blur(8px)", textAlign:"center" }}>
             <div style={{ fontSize:18, fontWeight:800, color:"#fff" }}>{n}</div>
             <div style={{ fontSize:11, color:"rgba(199,210,254,0.65)", marginTop:2 }}>{l}</div>
@@ -366,13 +366,13 @@ function ListingCard({ listing, delay = 0 }) {
           padding:"3px 10px", borderRadius:999,
           boxShadow:"0 2px 8px rgba(0,0,0,0.2)",
         }}>
-          {listing.verified}% Verified
+          {listing.verified} % vérifié
         </span>
       </div>
 
       <div style={{ padding:"13px 14px 15px" }}>
         <div style={{ marginBottom:5 }}>
-          <div style={{ fontSize:10, color:C.muted, fontWeight:500, marginBottom:1 }}>From</div>
+          <div style={{ fontSize:10, color:C.muted, fontWeight:500, marginBottom:1 }}>À partir de</div>
           <div style={{ fontSize:17, fontWeight:800, color:C.text, letterSpacing:"-0.4px" }}>
             MAD {listing.price.toLocaleString()}
             <span style={{ fontSize:12, fontWeight:500, color:C.muted }}>/m</span>
@@ -394,7 +394,7 @@ function ListingCard({ listing, delay = 0 }) {
 
         {listing.reason && (
           <div style={{ marginTop:9, paddingTop:9, borderTop:`1px solid ${C.border}`, fontSize:11, color:C.muted, display:"flex", gap:4 }}>
-            <span style={{ color:C.primary, fontWeight:700 }}>Smart Reason:</span>
+            <span style={{ color:C.primary, fontWeight:700 }}>Raison IA :</span>
             {listing.reason}
           </div>
         )}
@@ -405,18 +405,18 @@ function ListingCard({ listing, delay = 0 }) {
 
 /* ─── Data ──────────────────────────────────────────────────────── */
 const AI_LISTINGS = [
-  { id:1, title:"Modern Studio near University of Rabat",     location:"University of Rabat", price:2500, verified:99, amenities:["Wi-Fi","Laundry","Near campus"], reason:"Close to Engineering School." },
-  { id:2, title:"Riad Room in Tangier, in Tangier",           location:"on Tangier",           price:2500, verified:99, amenities:["Wi-Fi","Furnished","Near campus"], reason:"Close to Engineering School." },
-  { id:3, title:"Shared Flat near Hassan II campus In Rabat", location:"Rabat",                price:2500, verified:99, amenities:["Wi-Fi","Laundry","Near campus"],   reason:"Close to Engineering School." },
+  { id:1, title:"Studio moderne près de l’Université de Rabat", location:"Université de Rabat", price:2500, verified:99, amenities:["Wi-Fi","Buanderie","Proche campus"], reason:"Proche de l’école d’ingénieurs." },
+  { id:2, title:"Chambre dans un riad à Tanger", location:"Tanger", price:2500, verified:99, amenities:["Wi-Fi","Meublé","Proche campus"], reason:"Proche de l’école d’ingénieurs." },
+  { id:3, title:"Colocation près du campus Hassan II à Rabat", location:"Rabat", price:2500, verified:99, amenities:["Wi-Fi","Buanderie","Proche campus"], reason:"Proche de l’école d’ingénieurs." },
 ];
 
 const FEATURED_LISTINGS = [
-  { id:4,  title:"Premium Student Space",  location:"University of Rabat", price:1800, verified:98, amenities:["Wi-Fi","Laundry","Near campus"], featured:true },
-  { id:5,  title:"Stunium Student Space",  location:"on Tangier",          price:1800, verified:98, amenities:["Wi-Fi","Laundry","Near campus"], featured:true },
-  { id:6,  title:"Shared Student Space",   location:"University of Rabat", price:1800, verified:98, amenities:["Wi-Fi","Laundry","Near campus"], featured:true },
-  { id:7,  title:"Shared Student Space",   location:"University of Rabat", price:1800, verified:98, amenities:["Wi-Fi","Laundry","Near campus"], featured:true },
-  { id:8,  title:"Shared Student Space",   location:"on Tangier",          price:1800, verified:98, amenities:["Wi-Fi","Laundry","Near campus"], featured:true },
-  { id:9,  title:"Shared Student Space",   location:"University of Tangier",price:1500, verified:98, amenities:["Wi-Fi","Laundry","Near campus"], featured:true },
+  { id:4,  title:"Logement étudiant premium",  location:"Université de Rabat", price:1800, verified:98, amenities:["Wi-Fi","Buanderie","Proche campus"], featured:true },
+  { id:5,  title:"Espace étudiant à Tanger",  location:"Tanger", price:1800, verified:98, amenities:["Wi-Fi","Buanderie","Proche campus"], featured:true },
+  { id:6,  title:"Colocation étudiante",   location:"Université de Rabat", price:1800, verified:98, amenities:["Wi-Fi","Buanderie","Proche campus"], featured:true },
+  { id:7,  title:"Colocation étudiante",   location:"Université de Rabat", price:1800, verified:98, amenities:["Wi-Fi","Buanderie","Proche campus"], featured:true },
+  { id:8,  title:"Colocation étudiante",   location:"Tanger", price:1800, verified:98, amenities:["Wi-Fi","Buanderie","Proche campus"], featured:true },
+  { id:9,  title:"Colocation étudiante",   location:"Université de Tanger",price:1500, verified:98, amenities:["Wi-Fi","Buanderie","Proche campus"], featured:true },
 ];
 
 /* ─── Split listings section ────────────────────────────────────── */
@@ -428,13 +428,13 @@ function ListingsSection() {
         {/* LEFT – AI recs */}
         <div>
           <p style={{ fontSize:11, fontWeight:700, color:C.primary, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4 }}>
-            AI Recommendations (Top 3)
+            Recommandations IA (Top 3)
           </p>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24 }}>
             <h2 style={{ fontSize:"1.5rem", fontWeight:800, color:C.text, letterSpacing:"-0.5px", lineHeight:1.25 }}>
-              AI-Curated Recommendations<br/>for You
+              Recommandations sélectionnées par l’IA<br/>pour vous
             </h2>
-            <a href="#" className="see-link">See all →</a>
+            <a href="#" className="see-link">Tout voir →</a>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
             {AI_LISTINGS.map((l,i) => <ListingCard key={l.id} listing={l} delay={i*0.08} />)}
@@ -445,9 +445,9 @@ function ListingsSection() {
         <div>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24 }}>
             <h2 style={{ fontSize:"1.5rem", fontWeight:800, color:C.text, letterSpacing:"-0.5px" }}>
-              Featured Listings
+              Annonces à la une
             </h2>
-            <a href="#" className="see-link">View all →</a>
+            <a href="#" className="see-link">Tout voir →</a>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
             {FEATURED_LISTINGS.map((l,i) => <ListingCard key={l.id} listing={l} delay={i*0.06} />)}
@@ -461,9 +461,9 @@ function ListingsSection() {
 
 /* ─── How It Works ──────────────────────────────────────────────── */
 const STEPS = [
-  { icon:"🔍", num:"01", title:"Search & Filter",       desc:"Browse thousands of verified listings by city, campus, budget, and room type." },
-  { icon:"📅", num:"02", title:"Book a Viewing",         desc:"Schedule in-person or virtual tours directly from the listing page."          },
-  { icon:"✅", num:"03", title:"Move In Confidently",    desc:"Every listing is verified. Sign digitally and move in stress-free."            },
+  { icon:"🔍", num:"01", title:"Rechercher et filtrer",       desc:"Parcourez des milliers d’annonces vérifiées par ville, campus, budget et type de logement." },
+  { icon:"📅", num:"02", title:"Réserver une visite",         desc:"Planifiez une visite sur place ou virtuelle directement depuis la page de l’annonce."          },
+  { icon:"✅", num:"03", title:"Emménager sereinement",    desc:"Chaque annonce est vérifiée. Signez numériquement et emménagez sans stress."            },
 ];
 
 function HowItWorks() {
@@ -471,14 +471,14 @@ function HowItWorks() {
     <section style={{ background:"#fff", padding:"72px 2rem" }}>
       <div style={{ maxWidth:1280, margin:"0 auto" }}>
         <div style={{ textAlign:"center", marginBottom:52 }}>
-          <p style={{ fontSize:11, fontWeight:700, color:C.primary, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:10 }}>Simple Process</p>
-          <h2 style={{ fontSize:"2rem", fontWeight:800, color:C.text, letterSpacing:"-0.5px" }}>How UniHome Works</h2>
+          <p style={{ fontSize:11, fontWeight:700, color:C.primary, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:10 }}>Processus simple</p>
+          <h2 style={{ fontSize:"2rem", fontWeight:800, color:C.text, letterSpacing:"-0.5px" }}>Comment UniHome fonctionne</h2>
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:28 }}>
           {STEPS.map((step,i) => (
             <div key={step.num} className={`step-card${i===1?" featured":""}`}>
               <div style={{ fontSize:38, marginBottom:18 }}>{step.icon}</div>
-              <div style={{ fontSize:10, fontWeight:700, color:i===1?"rgba(255,255,255,0.65)":C.primary, letterSpacing:"0.08em", marginBottom:8 }}>STEP {step.num}</div>
+              <div style={{ fontSize:10, fontWeight:700, color:i===1?"rgba(255,255,255,0.65)":C.primary, letterSpacing:"0.08em", marginBottom:8 }}>ÉTAPE {step.num}</div>
               <h3 style={{ fontSize:16, fontWeight:700, color:i===1?"#fff":C.text, margin:"0 0 10px" }}>{step.title}</h3>
               <p style={{ fontSize:14, color:i===1?"rgba(255,255,255,0.78)":C.muted, lineHeight:1.75, margin:0 }}>{step.desc}</p>
             </div>
@@ -504,12 +504,12 @@ function Footer() {
                 Uni<span style={{ color:"#818cf8" }}>Home</span>
               </span>
             </div>
-            <p style={{ fontSize:13, lineHeight:1.85, maxWidth:230 }}>Verified student housing across Morocco — simple, safe, affordable.</p>
+            <p style={{ fontSize:13, lineHeight:1.85, maxWidth:230 }}>Logements étudiants vérifiés partout au Maroc — simples, sûrs et abordables.</p>
           </div>
           {[
-            { h:"Explore",  links:["Discover","Map View","How it Works"] },
-            { h:"Company",  links:["About","Blog","Careers"] },
-            { h:"Support",  links:["Help Center","Contact Us","Trust & Safety"] },
+            { h:"Explorer",  links:["Découvrir","Vue carte","Comment ça marche"] },
+            { h:"Entreprise",  links:["À propos","Blog","Carrières"] },
+            { h:"Support",  links:["Centre d'aide","Contact","Confiance et sécurité"] },
           ].map(col => (
             <div key={col.h}>
               <h4 style={{ color:"#fff", fontSize:11, fontWeight:700, margin:"0 0 16px", textTransform:"uppercase", letterSpacing:"0.07em" }}>{col.h}</h4>
@@ -518,8 +518,8 @@ function Footer() {
           ))}
         </div>
         <div style={{ borderTop:"1px solid #1e293b", paddingTop:24, display:"flex", justifyContent:"space-between", fontSize:12, flexWrap:"wrap", gap:8 }}>
-          <span>© 2025 UniHome. All rights reserved.</span>
-          <span>Made with ♥ for Moroccan students</span>
+          <span>© 2026 UniHome. Tous droits réservés.</span>
+          <span>Fait avec ♥ pour les étudiants marocains</span>
         </div>
       </div>
     </footer>

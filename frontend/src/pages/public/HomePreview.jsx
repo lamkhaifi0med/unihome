@@ -628,7 +628,7 @@ function Hero({ scrollY }) {
         {/* Small trust badge */}
         <div className="mx-auto mb-8 flex w-fit items-center gap-2 rounded-full border border-indigo-200/60 bg-white/60 px-4 py-2 text-xs font-medium text-indigo-700 backdrop-blur-md dark:border-indigo-400/20 dark:bg-white/5 dark:text-indigo-200">
           <Sparkles className="h-3.5 w-3.5" />
-          Annonces contrôlées · Sans commission · Pensé pour étudiants
+          Annonces contrôlées · Sans commission · Pensé pour les étudiants
         </div>
 
         {/* Main headline */}
@@ -666,7 +666,7 @@ function Hero({ scrollY }) {
             className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-indigo-200/60 bg-white/70 px-7 py-4 font-[Syne,sans-serif] text-base font-semibold text-indigo-700 backdrop-blur-md transition hover:bg-white hover:shadow-md sm:w-auto dark:border-white/10 dark:bg-white/5 dark:text-indigo-200 dark:hover:bg-white/10"
           >
             <Home className="h-5 w-5" />
-            Je suis propriétaire
+            Je suis un propriétaire
           </Link>
         </div>
 
@@ -1211,13 +1211,13 @@ function AudienceSplit({ audience, setAudience }) {
             active={audience === "etudiant"}
             onClick={() => setAudience("etudiant")}
             icon={GraduationCap}
-            label="Je suis étudiant"
+            label="Je suis un étudiant"
           />
           <TabBtn
             active={audience === "proprietaire"}
             onClick={() => setAudience("proprietaire")}
             icon={Key}
-            label="Je suis propriétaire"
+            label="Je suis un propriétaire"
           />
         </div>
 
@@ -1260,7 +1260,7 @@ function StudentPanel() {
     },
     {
       icon: Phone,
-      title: "Contact direct, sans middleman",
+      title: "Contact direct, sans intermédiaire",
       text: "Le numéro ou le WhatsApp du vrai propriétaire. C’est toi qui décides.",
     },
     {
@@ -1357,7 +1357,7 @@ function OwnerPanel() {
     {
       icon: Sparkles,
       title: "Zéro commission, zéro agence",
-      text: "Tu gardes 100% de ton loyer. Pas d’intermédiaire, pas de frais cachés.",
+      text: "Tu gardes 100 % de ton loyer. Pas d’intermédiaire, pas de frais cachés.",
     },
   ];
 

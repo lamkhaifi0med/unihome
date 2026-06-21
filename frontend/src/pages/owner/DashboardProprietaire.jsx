@@ -32,19 +32,19 @@ const sidebarLinks = [
 
 const statusMeta = {
   VALIDEE: {
-    label: "Publiee",
+    label: "Publiée",
     icon: CheckCircle2,
     className:
       "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
   },
   EN_ATTENTE: {
-    label: "En verification",
+    label: "En vérification",
     icon: Clock,
     className:
       "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
   },
   REJETEE: {
-    label: "Rejetee",
+    label: "Rejetée",
     icon: XCircle,
     className: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
   },
@@ -54,7 +54,7 @@ const statusMeta = {
     className: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
   },
   ARCHIVEE: {
-    label: "Archivee",
+    label: "Archivée",
     icon: List,
     className: "bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-300",
   },
@@ -138,7 +138,7 @@ function RecentAnnonce({ annonce }) {
         </div>
 
         <p className="mt-3 text-xs text-gray-400">
-          Publiee {formatDate(annonce.datePublication)}
+          Publiée {formatDate(annonce.datePublication)}
         </p>
       </div>
     </article>
@@ -224,7 +224,7 @@ export default function DashboardProprietaire({ isDark, onToggleTheme }) {
   }, [annonces]);
 
   const recentAnnonces = annonces.slice(0, 3);
-  const ownerName = profile?.prenom || profile?.nom || "proprietaire";
+  const ownerName = profile?.prenom || profile?.nom || "propriétaire";
   const note =
     profile?.noteMoyenne !== null && profile?.noteMoyenne !== undefined
       ? `${Number(profile.noteMoyenne).toFixed(1)}/5`
@@ -271,19 +271,19 @@ export default function DashboardProprietaire({ isDark, onToggleTheme }) {
           <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
             <StatCard
               icon={List}
-              label="Annonces validees"
+              label="Annonces validées"
               value={stats.active}
               color="indigo"
             />
             <StatCard
               icon={Clock}
-              label="En verification"
+              label="En vérification"
               value={stats.pending}
               color="orange"
             />
             <StatCard
               icon={Heart}
-              label="Favoris recus"
+              label="Favoris reçus"
               value={stats.favorites}
               color="red"
             />
@@ -300,10 +300,10 @@ export default function DashboardProprietaire({ isDark, onToggleTheme }) {
               <div className="mb-5 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="font-display text-lg font-bold text-gray-900 dark:text-white">
-                    Annonces recentes
+                    Annonces récentes
                   </h2>
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Les dernieres publications liees a votre compte.
+                    Les dernières publications liées à votre compte.
                   </p>
                 </div>
                 <Link
@@ -327,7 +327,7 @@ export default function DashboardProprietaire({ isDark, onToggleTheme }) {
                     Aucune annonce pour le moment
                   </h3>
                   <p className="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
-                    Publiez votre premier logement pour commencer a suivre sa
+                    Publiez votre premier logement pour commencer à suivre sa
                     validation ici.
                   </p>
                   <Link
@@ -356,12 +356,12 @@ export default function DashboardProprietaire({ isDark, onToggleTheme }) {
                   <div>
                     <h3 className="font-display font-semibold text-gray-900 dark:text-white">
                       {profile?.estVerifieCin
-                        ? "Profil verifie"
-                        : "Verification CIN"}
+                        ? "Profil vérifié"
+                        : "Vérification CIN"}
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {profile?.estVerifieCin
-                        ? "Votre badge proprietaire est actif."
+                        ? "Votre badge propriétaire est actif."
                         : "Validation admin encore requise."}
                     </p>
                   </div>
@@ -376,7 +376,7 @@ export default function DashboardProprietaire({ isDark, onToggleTheme }) {
 
               <div className="glass-light rounded-2xl p-6">
                 <h3 className="font-display font-semibold text-gray-900 dark:text-white">
-                  Resume moderation
+                  Résumé de modération
                 </h3>
                 <div className="mt-4 space-y-3 text-sm">
                   <div className="flex items-center justify-between">
@@ -389,7 +389,7 @@ export default function DashboardProprietaire({ isDark, onToggleTheme }) {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-500 dark:text-gray-400">
-                      Annonces bloquees
+                      Annonces bloquées
                     </span>
                     <span className="font-semibold text-gray-900 dark:text-white">
                       {stats.rejected}

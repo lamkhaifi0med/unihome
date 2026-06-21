@@ -46,6 +46,17 @@ COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types an
 
 
 --
+-- Name: unaccent; Type: EXTENSION; Schema: -; Owner: -
+-- Used by the chatbot search for case- and accent-insensitive text matching.
+--
+
+CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+
+
+COMMENT ON EXTENSION unaccent IS 'text search dictionary that removes accents';
+
+
+--
 -- Name: role_enum; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -167,15 +178,27 @@ CREATE FUNCTION public.recalcule_note_proprietaire() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
+    v_annonce_id UUID;
     v_proprietaire_id UUID;
 BEGIN
-    -- R+¬cup+¬rer le propri+¬taire via annonce GåÆ logement
+    -- NEW is NULL on DELETE; OLD is NULL on INSERT.
+    IF (TG_OP = 'DELETE') THEN
+        v_annonce_id := OLD.annonce_id;
+    ELSE
+        v_annonce_id := NEW.annonce_id;
+    END IF;
+
+    -- Resolve owner via annonce -> logement.
     SELECT l.proprietaire_id INTO v_proprietaire_id
     FROM annonces a
     JOIN logements l ON l.id = a.logement_id
-    WHERE a.id = NEW.annonce_id;
+    WHERE a.id = v_annonce_id;
 
-    -- Recalcul agr+¬g+¬
+    IF v_proprietaire_id IS NULL THEN
+        IF (TG_OP = 'DELETE') THEN RETURN OLD; ELSE RETURN NEW; END IF;
+    END IF;
+
+    -- Recompute aggregates for that owner.
     UPDATE utilisateurs
     SET
         note_moyenne  = (
@@ -185,16 +208,20 @@ BEGIN
             JOIN logements l ON l.id = a.logement_id
             WHERE l.proprietaire_id = v_proprietaire_id
         ),
-        nb_avis_total = (
+        nb_avis_total = COALESCE((
             SELECT COUNT(*)
             FROM avis av
             JOIN annonces a ON a.id = av.annonce_id
             JOIN logements l ON l.id = a.logement_id
             WHERE l.proprietaire_id = v_proprietaire_id
-        )
+        ), 0)
     WHERE id = v_proprietaire_id;
 
-    RETURN NEW;
+    IF (TG_OP = 'DELETE') THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
 END;
 $$;
 

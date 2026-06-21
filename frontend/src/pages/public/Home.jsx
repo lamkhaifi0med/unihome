@@ -26,7 +26,7 @@ export default function Home() {
 
             <p className="text-lg md:text-xl text-white/70 mb-10 leading-relaxed font-body">
               UniHome rend la recherche simple, rapide et sans arnaques. Compare
-              des annonces verifiees, avec un score IA clair sur chaque
+              des annonces vérifiées, avec un score IA clair sur chaque
               logement.
             </p>
 
@@ -44,14 +44,14 @@ export default function Home() {
                 href="#how-it-works"
                 className="border-2 border-white/40 text-white font-display font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-all"
               >
-                Comment ca marche
+                Comment ça marche
               </a>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-4 text-white/80 text-sm">
               {[
                 ["1 200+", "annonces"],
-                ["40+", "universites"],
+                ["40+", "universités"],
                 ["Score IA", "sur chaque annonce"],
               ].map(([value, label]) => (
                 <div
@@ -78,7 +78,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="section-title">Comment le score fonctionne</h2>
             <p className="section-subtitle">
-              Un systeme clair pour eliminer les arnaques avant contact
+              Un système clair pour éliminer les arnaques avant contact
             </p>
           </div>
 
@@ -86,18 +86,18 @@ export default function Home() {
             {[
               {
                 icon: Shield,
-                title: "Identite verifiee",
-                desc: "Chaque proprietaire est controle manuellement (CIN) avant publication.",
+                title: "Identité vérifiée",
+                desc: "Chaque propriétaire est contrôlé manuellement (CIN) avant publication.",
               },
               {
                 icon: Brain,
                 title: "Analyse IA automatique",
-                desc: "4 couches de verification: texte, photos, prix, coherence globale.",
+                desc: "4 couches de vérification : texte, photos, prix, cohérence globale.",
               },
               {
                 icon: Users,
                 title: "Signalement communautaire",
-                desc: "3 signalements confirms = annonce suspendue automatiquement.",
+                desc: "3 signalements confirmés = annonce suspendue automatiquement.",
               },
             ].map(({ icon: Icon, title, desc }) => (
               <div
@@ -120,9 +120,9 @@ export default function Home() {
           <div className="mt-12">
             <div className="h-3 rounded-full bg-gradient-to-r from-red-500 via-violet-500 to-emerald-500 shadow-inner" />
             <div className="mt-3 grid grid-cols-3 text-xs text-gray-500 dark:text-gray-400">
-              <span className="text-left">Refuse</span>
-              <span className="text-center">En revision</span>
-              <span className="text-right">Publie automatiquement</span>
+              <span className="text-left">Refusée</span>
+              <span className="text-center">En révision</span>
+              <span className="text-right">Publié automatiquement</span>
             </div>
           </div>
         </div>
@@ -135,9 +135,9 @@ export default function Home() {
       >
         <div className="page-container">
           <div className="text-center mb-14">
-            <h2 className="section-title">Comment ca marche</h2>
+            <h2 className="section-title">Comment ça marche</h2>
             <p className="section-subtitle">
-              4 etapes simples pour trouver un logement fiable
+              4 étapes simples pour trouver un logement fiable
             </p>
           </div>
 
@@ -145,8 +145,8 @@ export default function Home() {
             {[
               {
                 step: "1",
-                title: "Cree ton compte",
-                desc: "Inscris-toi et indique ton universite et ton budget.",
+                title: "Crée ton compte",
+                desc: "Inscris-toi et indique ton université et ton budget.",
               },
               {
                 step: "2",
@@ -156,12 +156,12 @@ export default function Home() {
               {
                 step: "3",
                 title: "Consulte les fiches",
-                desc: "Compare les scores IA, photos et equipements.",
+                desc: "Compare les scores IA, les photos et les équipements.",
               },
               {
                 step: "4",
-                title: "Contacte le proprietaire",
-                desc: "Demande une visite en toute securite.",
+                title: "Contacte le propriétaire",
+                desc: "Demande une visite en toute sécurité.",
               },
             ].map(({ step, title, desc }) => (
               <div
@@ -193,18 +193,18 @@ export default function Home() {
           <div className="text-center mb-14">
             <h2 className="section-title">Villes en vedette</h2>
             <p className="section-subtitle">
-              Des milliers d'annonces pres de votre campus
+              Des milliers d'annonces près de votre campus
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              "Fes",
+              "Fès",
               "Casablanca",
               "Rabat",
               "Marrakech",
-              "Meknes",
-              "Kenitra",
+              "Meknès",
+              "Kénitra",
             ].map((city) => (
               <div
                 key={city}
@@ -241,7 +241,7 @@ export default function Home() {
         <div className="relative page-container">
           <div className="glass-light rounded-3xl border border-white/20 bg-white/10 px-8 py-10 text-center">
             <h2 className="font-display font-bold text-3xl md:text-4xl text-white mb-3">
-              Vous etes proprietaire ?
+              Vous êtes propriétaire ?
             </h2>
             <p className="text-white/80 text-lg mb-6">
               Publiez votre annonce gratuitement.
@@ -250,7 +250,7 @@ export default function Home() {
               to="/register?role=PROPRIETAIRE"
               className="bg-white text-indigo-700 font-display font-bold px-8 py-3.5 rounded-xl hover:bg-gray-50 transition-all shadow-xl hover:shadow-white/20"
             >
-              Deposer une annonce
+              Déposer une annonce
             </Link>
           </div>
         </div>

@@ -42,7 +42,7 @@ export default function AuthPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Something went wrong");
+        alert(data.message || "Une erreur est survenue.");
         return;
       }
 
@@ -52,19 +52,21 @@ export default function AuthPage() {
 
         if (data.token) {
           localStorage.setItem("token", data.token);
-          alert("Login successful!");
+          alert("Connexion réussie !");
         } else {
-          alert("Login failed: no token received");
+          alert("Connexion échouée : aucun jeton reçu.");
         }
       }
 
       // ✅ REGISTER SUCCESS
       if (tab === "signup") {
-        alert("Account created! Please check your email for confirmation.");
+        alert(
+          "Compte créé ! Vérifiez votre adresse e-mail pour confirmer l'inscription.",
+        );
       }
     } catch (error) {
       console.error(error);
-      alert("Server error. Check backend.");
+      alert("Erreur serveur. Vérifiez le backend.");
     } finally {
       setLoading(false);
     }
@@ -72,11 +74,11 @@ export default function AuthPage() {
 
   return (
     <div style={{ padding: 40 }}>
-      <h2>{tab === "login" ? "Login" : "Sign Up"}</h2>
+      <h2>{tab === "login" ? "Connexion" : "Inscription"}</h2>
 
       {tab === "signup" && (
         <input
-          placeholder="Full Name"
+          placeholder="Nom complet"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -85,7 +87,7 @@ export default function AuthPage() {
       <br />
 
       <input
-        placeholder="Email"
+        placeholder="Adresse e-mail"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
@@ -94,7 +96,7 @@ export default function AuthPage() {
 
       <input
         type="password"
-        placeholder="Password"
+        placeholder="Mot de passe"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
@@ -102,13 +104,18 @@ export default function AuthPage() {
       <br />
 
       <button onClick={handleSubmit} disabled={loading}>
-        {loading ? "Loading..." : tab === "login" ? "Login" : "Sign Up"}
+        {loading
+          ? "Chargement..."
+          : tab === "login"
+            ? "Connexion"
+            : "Inscription"}
       </button>
 
-      <br /><br />
+      <br />
+      <br />
 
       <button onClick={() => setTab(tab === "login" ? "signup" : "login")}>
-        Switch to {tab === "login" ? "Sign Up" : "Login"}
+        Passer à {tab === "login" ? "l’inscription" : "la connexion"}
       </button>
     </div>
   );

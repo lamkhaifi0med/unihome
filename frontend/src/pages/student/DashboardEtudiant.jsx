@@ -131,7 +131,7 @@ export default function DashboardEtudiant({ isDark, onToggleTheme }) {
           </div>
         ) : recommandations.length === 0 ? (
           <div className="glass-light rounded-2xl p-10 text-center text-gray-400 dark:text-gray-500">
-            <p>Aucune annonce trouvée près de votre campus.</p>
+            <p>Aucune annonce trouvée à proximité de votre campus.</p>
             <Link to="/search" className="btn-primary mt-4 inline-block">
               Rechercher manuellement
             </Link>
