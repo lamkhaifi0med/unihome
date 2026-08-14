@@ -23,6 +23,11 @@ public class AdminUserDTO {
     private Boolean emailConfirme;
     private LocalDateTime createdAt;
 
+    // Suspension (null si compte actif)
+    private String raisonSuspension;
+    private String appelMessage;
+    private LocalDateTime appelDate;
+
     // Proprietaire fields (null for ETUDIANT / ADMIN)
     private Boolean estVerifieCin;
     private String numeroCin;

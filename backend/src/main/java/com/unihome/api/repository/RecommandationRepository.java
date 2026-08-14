@@ -8,5 +8,7 @@ import java.util.UUID;
 
 @Repository
 public interface RecommandationRepository extends JpaRepository<Recommandation, UUID> {
+
+    void deleteByAnnonce_Id(UUID annonceId);
 }
 

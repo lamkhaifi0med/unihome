@@ -29,6 +29,11 @@
     scroll-behavior: smooth;
   }
 
+  /* JetBrains Mono: plain zero at micro sizes — slashed zero reads as 8 */
+  .font-mono {
+    font-feature-settings: "zero" 0;
+  }
+
   body {
     @apply font-body antialiased transition-colors duration-300;
     background-color: var(--color-bg);
@@ -323,4 +328,137 @@
 }
 .unibot-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.55);
+}
+
+/* ── UniBot signature moves ── */
+@keyframes unibot-aura-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animated conic halo that wakes up while the bot is thinking */
+.unibot-aura {
+  position: absolute;
+  inset: -14px;
+  border-radius: 32px;
+  overflow: hidden;
+  filter: blur(18px);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+.unibot-aura::before {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(37, 99, 235, 0.55) 60deg,
+    rgba(56, 189, 248, 0.4) 120deg,
+    transparent 180deg,
+    rgba(37, 99, 235, 0.45) 300deg,
+    transparent 360deg
+  );
+  animation: unibot-aura-spin 3.2s linear infinite;
+}
+.unibot-aura--on {
+  opacity: 1;
+}
+
+/* Sparkle orbiting the welcome avatar */
+@keyframes unibot-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.unibot-orbit {
+  position: absolute;
+  inset: -10px;
+  animation: unibot-orbit 5s linear infinite;
+  pointer-events: none;
+}
+.unibot-orbit::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 6px;
+  width: 6px;
+  margin-left: -3px;
+  border-radius: 9999px;
+  background: #3b82f6;
+  box-shadow: 0 0 10px 2px rgba(59, 130, 246, 0.65);
+}
+.unibot-orbit--reverse {
+  inset: -18px;
+  animation-duration: 8s;
+  animation-direction: reverse;
+}
+.unibot-orbit--reverse::before {
+  height: 4px;
+  width: 4px;
+  margin-left: -2px;
+  background: #93c5fd;
+  box-shadow: 0 0 8px 2px rgba(147, 197, 253, 0.55);
+}
+
+/* Bot avatar breathing while typing */
+@keyframes unibot-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 6px 16px -6px rgba(37, 99, 235, 0.6);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 8px 24px -4px rgba(37, 99, 235, 0.85);
+  }
+}
+.unibot-breathe {
+  animation: unibot-breathe 1.6s ease-in-out infinite;
+}
+
+/* Cascading entrance for welcome capability cards */
+@keyframes unibot-cascade {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.unibot-cascade {
+  opacity: 0;
+  animation: unibot-cascade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Faint control-room dot grid behind the conversation */
+.unibot-dotgrid {
+  background-image: radial-gradient(
+    rgba(113, 113, 122, 0.14) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+.dark .unibot-dotgrid {
+  background-image: radial-gradient(
+    rgba(161, 161, 170, 0.09) 1px,
+    transparent 1px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unibot-aura::before,
+  .unibot-orbit,
+  .unibot-breathe,
+  .unibot-cascade {
+    animation: none;
+  }
+  .unibot-cascade {
+    opacity: 1;
+  }
 }

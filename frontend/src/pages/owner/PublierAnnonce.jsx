@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import imageCompression from "browser-image-compression";
 import {
   AlertCircle,
   CheckCircle,
@@ -14,6 +15,7 @@ import {
   Phone,
   PlusCircle,
   ShieldCheck,
+  Star,
   Upload,
   User,
   X,
@@ -31,6 +33,7 @@ const sidebarLinks = [
 
 const steps = ["Logement", "Photos", "Équipements", "Contacts"];
 const typeLogements = ["STUDIO", "CHAMBRE", "COLOCATION", "APPARTEMENT"];
+const MAX_JUSTIFICATIF_MB = 10;
 const statusLabels = {
   VALIDEE: "Publiée",
   EN_ATTENTE: "En vérification",
@@ -41,6 +44,203 @@ const statusLabels = {
 const defaultMapCenter = { latitude: 34.018125, longitude: -5.007845 };
 const LEAFLET_JS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 const LEAFLET_CSS = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+
+const FIELD =
+  "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white dark:placeholder-zinc-500 dark:focus:border-blue-500";
+const BTN_GHOST =
+  "inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-blue-300 hover:text-blue-700 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-blue-500/50 dark:hover:text-blue-300";
+const BTN_PRIMARY =
+  "inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50";
+
+/* ── Contrôle qualité : estimation locale du dossier ──
+   Miroir simplifié des règles du scoring IA (poids réels : justificatif
+   0.35, photos 0.20, prix 0.20, description 0.15, cohérence 0.10).
+   Purement indicatif — le score final est calculé côté IA. */
+function estimateDossier({ form, photos, justificatifFile, isEdit }) {
+  const hasJustificatif = Boolean(justificatifFile) || isEdit;
+
+  const loyer = Number(form.loyer) || 0;
+  const isChambreOuColoc = ["CHAMBRE", "COLOCATION"].includes(
+    form.typeLogement,
+  );
+  let prix = 0;
+  if (loyer > 0) {
+    if (loyer < 800) prix = 18;
+    else if (loyer <= 1500) prix = isChambreOuColoc ? 62 : 46;
+    else if (loyer <= 6000) prix = 84;
+    else if (loyer <= 9000) prix = 62;
+    else prix = 45;
+  }
+
+  const words = form.description.trim()
+    ? form.description.trim().split(/\s+/).length
+    : 0;
+  let description = 0;
+  if (words > 0) {
+    description = words < 20 ? 52 : 82;
+    if (
+      /avance|western union|virement avant|caution avant/i.test(
+        form.description,
+      )
+    )
+      description = Math.min(description, 27);
+  }
+
+  let photosScore = 0;
+  if (photos.length >= 6) photosScore = 90;
+  else if (photos.length >= 4) photosScore = 75;
+  else if (photos.length >= 2) photosScore = 55;
+
+  const coherence =
+    form.typeLogement &&
+    form.ville &&
+    form.adresse.trim() &&
+    Number(form.superficie) > 0 &&
+    form.latitude !== ""
+      ? 70
+      : 0;
+
+  return [
+    {
+      key: "justificatif",
+      label: "Justificatif",
+      weight: 0.35,
+      score: hasJustificatif ? 85 : 0,
+      advice: hasJustificatif
+        ? "Document fourni — critère le plus lourd du score."
+        : "Sans justificatif, l'annonce ne peut pas être publiée.",
+    },
+    {
+      key: "photos",
+      label: "Photos",
+      weight: 0.2,
+      score: photosScore,
+      advice:
+        photos.length >= 6
+          ? `${photos.length} photos — excellent.`
+          : photos.length >= 2
+            ? `${photos.length} photos — visez 6+ pour convaincre l'IA.`
+            : "Ajoutez au moins 2 photos (idéalement 6+).",
+    },
+    {
+      key: "prix",
+      label: "Prix",
+      weight: 0.2,
+      score: prix,
+      advice:
+        loyer === 0
+          ? "Indiquez le loyer mensuel."
+          : prix >= 84
+            ? "Loyer dans la fourchette attendue du marché."
+            : loyer < 800
+              ? "Un loyer très bas est traité comme suspect par l'IA."
+              : "Loyer hors fourchette idéale — vérifiez le marché local.",
+    },
+    {
+      key: "description",
+      label: "Description",
+      weight: 0.15,
+      score: description,
+      advice:
+        words === 0
+          ? "Décrivez le logement (20 mots minimum conseillés)."
+          : description <= 27
+            ? "Évitez de demander un paiement avant visite — forte pénalité."
+            : words < 20
+              ? `${words} mots — développez (20+ mots évitent une pénalité).`
+              : `${words} mots — bonne longueur.`,
+    },
+    {
+      key: "coherence",
+      label: "Cohérence",
+      weight: 0.1,
+      score: coherence,
+      advice: coherence
+        ? "Type, ville, adresse et localisation renseignés."
+        : "Complétez le logement et placez-le sur la carte.",
+    },
+  ];
+}
+
+function meterColor(score) {
+  if (score >= 70) return "bg-emerald-500";
+  if (score >= 40) return "bg-amber-500";
+  return "bg-red-500";
+}
+
+function DossierMeter({ form, photos, justificatifFile, isEdit }) {
+  const items = estimateDossier({ form, photos, justificatifFile, isEdit });
+  const total = Math.round(
+    items.reduce((sum, item) => sum + item.score * item.weight, 0),
+  );
+  const weakest = [...items].sort((a, b) => a.score - b.score)[0];
+  const verdictText =
+    total >= 70
+      ? "trajectoire : publication directe"
+      : total >= 40
+        ? "trajectoire : vérification manuelle"
+        : "trajectoire : rejet probable";
+  const verdictColor =
+    total >= 70
+      ? "text-emerald-600 dark:text-emerald-400"
+      : total >= 40
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-red-600 dark:text-red-400";
+
+  return (
+    <aside className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 lg:sticky lg:top-6">
+      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-blue-600 dark:text-blue-400">
+        contrôle qualité · temps réel
+      </p>
+      <div className="mt-3 flex items-baseline gap-2">
+        <span className="font-mono text-4xl font-bold tabular-nums text-zinc-950 dark:text-white">
+          {total}
+        </span>
+        <span className="font-mono text-sm text-zinc-400 dark:text-zinc-500">
+          /100 estimé
+        </span>
+      </div>
+      <p
+        className={`mt-1 font-mono text-[10px] uppercase tracking-[0.12em] ${verdictColor}`}
+      >
+        {verdictText}
+      </p>
+
+      <div className="mt-4 space-y-3">
+        {items.map((item) => (
+          <div key={item.key}>
+            <div className="flex items-baseline justify-between">
+              <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                {item.label}
+              </span>
+              <span className="font-mono text-[10px] tabular-nums text-zinc-400 dark:text-zinc-500">
+                {item.score}/100 · ×{item.weight.toFixed(2)}
+              </span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${meterColor(item.score)}`}
+                style={{ width: `${item.score}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs leading-snug text-blue-800 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-200">
+        <span className="font-semibold">
+          Conseil — {weakest.label.toLowerCase()} :
+        </span>{" "}
+        {weakest.advice}
+      </div>
+
+      <p className="mt-3 font-mono text-[10px] leading-relaxed text-zinc-400 dark:text-zinc-500">
+        estimation indicative · le score final est calculé par l'ia à la
+        soumission (seuils : ≥70 publiée · 40–69 vérification · &lt;40 rejetée)
+      </p>
+    </aside>
+  );
+}
 
 function loadLeaflet() {
   if (window.L) return Promise.resolve(window.L);
@@ -216,48 +416,48 @@ function LocationPicker({ latitude, longitude, mapCenter, onChange }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-gray-900">
+    <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="relative h-80">
         <div
           ref={mapNode}
           className="h-full w-full [&_.leaflet-control-zoom]:overflow-hidden [&_.leaflet-control-zoom]:rounded-xl [&_.leaflet-control-zoom]:border-0 [&_.leaflet-control-zoom]:shadow-lg [&_.leaflet-popup-content-wrapper]:rounded-2xl"
         />
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-gray-500 backdrop-blur dark:bg-dark-900/80 dark:text-gray-300">
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-zinc-500 backdrop-blur dark:bg-zinc-950/80 dark:text-zinc-300">
             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
             Chargement de la carte...
           </div>
         )}
-        <div className="pointer-events-none absolute left-4 top-4 max-w-sm rounded-2xl border border-white/80 bg-white/90 p-3 text-xs text-gray-600 shadow-xl backdrop-blur dark:border-white/10 dark:bg-dark-900/90 dark:text-gray-300">
+        <div className="pointer-events-none absolute left-4 top-4 max-w-sm rounded-2xl border border-white/80 bg-white/90 p-3 text-xs text-zinc-600 shadow-xl backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-300">
           Cliquez sur la carte ou déplacez le marqueur pour choisir l'entrée
           exacte du logement.
         </div>
       </div>
-      <div className="flex flex-col gap-3 border-t border-gray-200 dark:border-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex flex-col gap-3 border-t border-zinc-200 dark:border-zinc-800 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
           {latitude !== "" && longitude !== ""
-            ? `Coordonnées sélectionnées : ${latitude}, ${longitude}`
-            : "Aucun point choisi. Cliquez sur la carte ou recherchez une adresse."}
+            ? `${latitude}, ${longitude}`
+            : "aucun point choisi — cliquez sur la carte"}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={centerOnCity}
-            className="btn-ghost text-sm"
+            className={`${BTN_GHOST} px-3 py-1.5 text-xs`}
           >
             Centrer sur la ville
           </button>
           <button
             type="button"
             onClick={useMapCenter}
-            className="btn-ghost text-sm"
+            className={`${BTN_GHOST} px-3 py-1.5 text-xs`}
           >
             Utiliser ce point
           </button>
           <button
             type="button"
             onClick={useCurrentLocation}
-            className="btn-ghost text-sm"
+            className={`${BTN_GHOST} px-3 py-1.5 text-xs`}
           >
             Ma position
           </button>
@@ -267,9 +467,11 @@ function LocationPicker({ latitude, longitude, mapCenter, onChange }) {
   );
 }
 
-export default function PublierAnnonce({ isDark, onToggleTheme }) {
+export default function PublierAnnonce({ isDark, onToggleTheme, mode }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { annonceId } = useParams();
+  const isEdit = mode === "edit";
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState([]);
   const [equipements, setEquipements] = useState([]);
@@ -299,8 +501,77 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
   const [searchingAddress, setSearchingAddress] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [photoNotice, setPhotoNotice] = useState("");
+  const [compressingCount, setCompressingCount] = useState(0);
   const [createdAnnonce, setCreatedAnnonce] = useState(null);
+  const [createdLogementId, setCreatedLogementId] = useState(null);
+  const [loadingAnnonce, setLoadingAnnonce] = useState(isEdit);
+  const [editSource, setEditSource] = useState(null);
+  const [loadError, setLoadError] = useState("");
   const photosRef = useRef([]);
+
+  // Mode edition : precharge l'annonce rejetee du proprietaire.
+  useEffect(() => {
+    if (!isEdit || !user?.id || !annonceId) return;
+    let isMounted = true;
+    setLoadingAnnonce(true);
+    ownerApi
+      .getOwnerAnnonces(user.id)
+      .then((res) => {
+        if (!isMounted) return;
+        const annonce = (res.data || []).find((item) => item.id === annonceId);
+        if (!annonce) {
+          setLoadError("Annonce introuvable.");
+          return;
+        }
+        if (annonce.statut !== "REJETEE") {
+          setLoadError("Seules les annonces rejetées peuvent être modifiées.");
+          return;
+        }
+        const contactMap = (annonce.contacts || []).reduce((acc, contact) => {
+          acc[contact.plateforme] = contact.valeur;
+          return acc;
+        }, {});
+        setForm((prev) => ({
+          ...prev,
+          titre: annonce.titre || "",
+          typeLogement: annonce.typeLogement || "",
+          ville: annonce.ville || "",
+          adresse: annonce.adresse || "",
+          superficie:
+            annonce.superficie != null ? String(annonce.superficie) : "",
+          latitude: annonce.latitude != null ? String(annonce.latitude) : "",
+          longitude: annonce.longitude != null ? String(annonce.longitude) : "",
+          loyer: annonce.loyer != null ? String(annonce.loyer) : "",
+          chargesIncluses: Boolean(annonce.chargesIncluses),
+          description: annonce.description || "",
+          telephone: contactMap.TELEPHONE || "",
+          whatsapp: contactMap.WHATSAPP || "",
+          email: contactMap.EMAIL || "",
+          facebook: contactMap.FACEBOOK || "",
+          instagram: contactMap.INSTAGRAM || "",
+        }));
+        setSelectedEquipementIds(annonce.equipementIds || []);
+        setPhotos(
+          (annonce.photos || []).map((url, index) => ({
+            url,
+            name: `Photo ${index + 1}`,
+            existing: true,
+            file: null,
+          })),
+        );
+        setEditSource(annonce);
+      })
+      .catch(() => {
+        if (isMounted) setLoadError("Impossible de charger l'annonce.");
+      })
+      .finally(() => {
+        if (isMounted) setLoadingAnnonce(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [isEdit, user?.id, annonceId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -335,7 +606,9 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
 
   useEffect(
     () => () => {
-      photosRef.current.forEach((photo) => URL.revokeObjectURL(photo.url));
+      photosRef.current.forEach((photo) => {
+        if (photo.url?.startsWith("blob:")) URL.revokeObjectURL(photo.url);
+      });
     },
     [],
   );
@@ -447,30 +720,107 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
     setError("");
   };
 
-  const handlePhotos = (files) => {
-    const nextPhotos = Array.from(files || [])
-      .filter((file) => file.type.startsWith("image/"))
-      .map((file) => ({
-        file,
-        name: file.name,
-        url: URL.createObjectURL(file),
-      }));
+  const handlePhotos = async (files) => {
+    const incoming = Array.from(files || []);
+    if (incoming.length === 0) return;
 
-    setPhotos((prev) => {
-      const merged = [...prev, ...nextPhotos].slice(0, 10);
-      const removed = [...prev, ...nextPhotos].slice(10);
-      removed.forEach((photo) => URL.revokeObjectURL(photo.url));
-      return merged;
+    const rejected = [];
+    const candidates = incoming.filter((file) => {
+      if (!file.type.startsWith("image/")) {
+        rejected.push(`${file.name} (format non supporté)`);
+        return false;
+      }
+      return true;
     });
+
+    // Limite de 10 photos au total
+    const remainingSlots = 10 - photosRef.current.length;
+    const accepted = candidates.slice(0, Math.max(remainingSlots, 0));
+    candidates.slice(Math.max(remainingSlots, 0)).forEach((file) => {
+      rejected.push(`${file.name} (limite de 10 photos atteinte)`);
+    });
+
+    setPhotoNotice("");
     setError("");
+    setCompressingCount(accepted.length);
+
+    const nextPhotos = [];
+    for (const file of accepted) {
+      try {
+        // Compression systématique : les photos de téléphone font souvent
+        // 2-8 MB alors qu'une annonce s'affiche en ~1200px. On réduit à
+        // 1920px / ~1 MB max avant l'envoi.
+        const compressed = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+          initialQuality: 0.8,
+        });
+        const finalFile = new File([compressed], file.name, {
+          type: compressed.type || "image/jpeg",
+        });
+        nextPhotos.push({
+          file: finalFile,
+          name: file.name,
+          url: URL.createObjectURL(finalFile),
+        });
+      } catch {
+        rejected.push(`${file.name} (fichier illisible ou corrompu)`);
+      } finally {
+        setCompressingCount((prev) => Math.max(prev - 1, 0));
+      }
+    }
+
+    if (nextPhotos.length > 0) {
+      setPhotos((prev) => [...prev, ...nextPhotos].slice(0, 10));
+    }
+    if (rejected.length > 0) {
+      setPhotoNotice(
+        `${rejected.length} fichier${rejected.length > 1 ? "s" : ""} ignoré${rejected.length > 1 ? "s" : ""} : ${rejected.join(", ")}`,
+      );
+    }
   };
 
   const removePhoto = (index) => {
     setPhotos((prev) => {
       const photo = prev[index];
-      if (photo) URL.revokeObjectURL(photo.url);
+      if (photo?.url?.startsWith("blob:")) URL.revokeObjectURL(photo.url);
       return prev.filter((_, itemIndex) => itemIndex !== index);
     });
+  };
+
+  // La premiere photo de la liste est la photo principale (couverture).
+  const makePrincipale = (index) => {
+    if (index === 0) return;
+    setPhotos((prev) => {
+      const next = [...prev];
+      const [photo] = next.splice(index, 1);
+      next.unshift(photo);
+      return next;
+    });
+  };
+
+  const selectJustificatif = (file) => {
+    if (!file) {
+      setJustificatifFile(null);
+      return;
+    }
+    const isAccepted =
+      file.type.startsWith("image/") || file.type === "application/pdf";
+    if (!isAccepted) {
+      setError(
+        "Justificatif refusé : seuls les fichiers PDF, JPG ou PNG sont acceptés.",
+      );
+      return;
+    }
+    if (file.size > MAX_JUSTIFICATIF_MB * 1024 * 1024) {
+      setError(
+        `Justificatif trop volumineux (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum ${MAX_JUSTIFICATIF_MB} MB.`,
+      );
+      return;
+    }
+    setJustificatifFile(file);
+    setError("");
   };
 
   const buildContacts = () => {
@@ -486,38 +836,71 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
       .filter((contact) => contact.valeur);
   };
 
-  const validate = () => {
-    if (!user?.id)
-      return "Utilisateur propriétaire introuvable. Reconnectez-vous.";
-    if (!form.titre.trim()) return "Le titre de l'annonce est requis.";
-    if (!form.typeLogement) return "Le type de logement est requis.";
-    if (!form.ville) return "La ville est requise.";
-    if (!form.adresse.trim()) return "L'adresse est requise.";
-    if (!form.superficie || Number(form.superficie) <= 0)
-      return "La superficie doit être positive.";
-    if (
-      form.latitude === "" ||
-      Number(form.latitude) < -90 ||
-      Number(form.latitude) > 90
-    )
-      return "Latitude invalide.";
-    if (
-      form.longitude === "" ||
-      Number(form.longitude) < -180 ||
-      Number(form.longitude) > 180
-    )
-      return "Longitude invalide.";
-    if (!form.loyer || Number(form.loyer) <= 0)
-      return "Le loyer doit être positif.";
-    if (!form.description.trim()) return "La description est requise.";
-    if (!justificatifFile) return "Le justificatif du logement est requis.";
-    if (photos.length < 2) return "Ajoutez au moins 2 photos.";
-    if (photos.length > 10) return "Maximum 10 photos.";
-    if (selectedEquipementIds.length === 0)
-      return "Sélectionnez au moins un équipement.";
-    if (buildContacts().length === 0)
-      return "Ajoutez au moins un moyen de contact.";
+  const validateStep = (targetStep) => {
+    if (targetStep === 1) {
+      if (!form.titre.trim()) return "Le titre de l'annonce est requis.";
+      if (!form.typeLogement) return "Le type de logement est requis.";
+      if (!form.ville) return "La ville est requise.";
+      if (!form.adresse.trim()) return "L'adresse est requise.";
+      if (!form.superficie || Number(form.superficie) <= 0)
+        return "La superficie doit être positive.";
+      if (
+        form.latitude === "" ||
+        Number(form.latitude) < -90 ||
+        Number(form.latitude) > 90
+      )
+        return "Placez le logement sur la carte.";
+      if (
+        form.longitude === "" ||
+        Number(form.longitude) < -180 ||
+        Number(form.longitude) > 180
+      )
+        return "Placez le logement sur la carte.";
+      if (!form.loyer || Number(form.loyer) <= 0)
+        return "Le loyer doit être positif.";
+      if (!form.description.trim()) return "La description est requise.";
+      if (!isEdit && !justificatifFile)
+        return "Le justificatif du logement est requis.";
+      return "";
+    }
+    if (targetStep === 2) {
+      if (compressingCount > 0)
+        return "Attendez la fin de l'optimisation des photos.";
+      if (photos.length < 2) return "Ajoutez au moins 2 photos.";
+      if (photos.length > 10) return "Maximum 10 photos.";
+      return "";
+    }
+    if (targetStep === 3) {
+      if (selectedEquipementIds.length === 0)
+        return "Sélectionnez au moins un équipement.";
+      return "";
+    }
+    if (targetStep === 4) {
+      if (!user?.id)
+        return "Utilisateur propriétaire introuvable. Reconnectez-vous.";
+      if (buildContacts().length === 0)
+        return "Ajoutez au moins un moyen de contact.";
+      return "";
+    }
     return "";
+  };
+
+  const validate = () => {
+    for (let s = 1; s <= 4; s += 1) {
+      const stepError = validateStep(s);
+      if (stepError) return stepError;
+    }
+    return "";
+  };
+
+  const goNext = () => {
+    const stepError = validateStep(step);
+    if (stepError) {
+      setError(stepError);
+      return;
+    }
+    setError("");
+    setStep((prev) => prev + 1);
   };
 
   const publish = async () => {
@@ -530,21 +913,60 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
     setSubmitting(true);
     setError("");
     try {
-      const logementRes = await ownerApi.createLogement(
-        {
-          proprietaireId: user.id,
-          adresse: form.adresse.trim(),
-          ville: form.ville,
-          superficie: Number(form.superficie),
-          typeLogement: form.typeLogement,
-          latitude: Number(form.latitude),
-          longitude: Number(form.longitude),
-        },
-        justificatifFile,
-      );
+      if (isEdit) {
+        const keptUrls = photos
+          .filter((photo) => photo.existing)
+          .map((photo) => photo.url);
+        const newPhotos = photos.filter((photo) => !photo.existing);
+        // Ordre d'affichage final : URL pour une photo conservee,
+        // "new:<i>" pour une nouvelle. La premiere = photo principale.
+        let newIndex = 0;
+        const ordrePhotos = photos.map((photo) =>
+          photo.existing ? photo.url : `new:${newIndex++}`,
+        );
+        const annonceRes = await ownerApi.updateAnnonce(
+          annonceId,
+          {
+            titre: form.titre.trim(),
+            description: form.description.trim(),
+            loyer: form.loyer,
+            chargesIncluses: form.chargesIncluses,
+            contacts: buildContacts(),
+            equipementIds: selectedEquipementIds,
+          },
+          keptUrls,
+          newPhotos,
+          justificatifFile,
+          ordrePhotos,
+        );
+        setCreatedAnnonce(annonceRes.data);
+        setDone(true);
+        return;
+      }
+
+      // Retry-safe : si le logement a déjà été créé lors d'une tentative
+      // précédente (échec de la publication), on le réutilise au lieu d'en
+      // créer un doublon.
+      let logementId = createdLogementId;
+      if (!logementId) {
+        const logementRes = await ownerApi.createLogement(
+          {
+            proprietaireId: user.id,
+            adresse: form.adresse.trim(),
+            ville: form.ville,
+            superficie: Number(form.superficie),
+            typeLogement: form.typeLogement,
+            latitude: Number(form.latitude),
+            longitude: Number(form.longitude),
+          },
+          justificatifFile,
+        );
+        logementId = logementRes.data.id;
+        setCreatedLogementId(logementId);
+      }
 
       const annonceRes = await ownerApi.publishAnnonce(
-        logementRes.data.id,
+        logementId,
         {
           titre: form.titre.trim(),
           description: form.description.trim(),
@@ -564,16 +986,45 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
         err?.response?.data?.detail ||
         err?.response?.data?.error ||
         null;
-      setError(
-        serverMsg ||
-          "Impossible de publier l'annonce. Vérifiez les informations.",
-      );
+      if (serverMsg) {
+        setError(serverMsg);
+      } else if (!err?.response) {
+        setError(
+          "Connexion interrompue pendant l'envoi. Vérifiez votre connexion puis réessayez : votre saisie est conservée.",
+        );
+      } else {
+        setError(
+          "Impossible de publier l'annonce. Vérifiez les informations puis réessayez.",
+        );
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (done)
+  if (done) {
+    const st = createdAnnonce?.statut;
+    const doneTone =
+      st === "VALIDEE"
+        ? {
+            ring: "border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10",
+            icon: "text-emerald-500",
+            kicker: "verdict · publiée",
+            kickerColor: "text-emerald-600 dark:text-emerald-400",
+          }
+        : st === "REJETEE"
+          ? {
+              ring: "border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10",
+              icon: "text-red-500",
+              kicker: "verdict · rejetée",
+              kickerColor: "text-red-600 dark:text-red-400",
+            }
+          : {
+              ring: "border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10",
+              icon: "text-amber-500",
+              kicker: "verdict · en vérification",
+              kickerColor: "text-amber-600 dark:text-amber-400",
+            };
     return (
       <DashboardLayout
         sidebarLinks={sidebarLinks}
@@ -581,31 +1032,77 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
         onToggleTheme={onToggleTheme}
       >
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center max-w-md">
-            <div className="w-24 h-24 rounded-full bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-12 h-12 text-emerald-500" />
+          <div className="w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-8 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div
+              className={`mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full border ${doneTone.ring}`}
+            >
+              <CheckCircle className={`h-10 w-10 ${doneTone.icon}`} />
             </div>
-            <h2 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-3">
-              Annonce soumise !
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
-              Votre annonce est maintenant enregistrée avec ses équipements.
+            <p
+              className={`font-mono text-[10px] uppercase tracking-[0.14em] ${doneTone.kickerColor}`}
+            >
+              {doneTone.kicker}
             </p>
-            {createdAnnonce?.statut && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                Statut actuel :{" "}
-                <span className="font-semibold">
-                  {statusLabels[createdAnnonce.statut] || createdAnnonce.statut}
+            <h2 className="mt-2 font-geist text-2xl font-bold tracking-[-0.01em] text-zinc-950 dark:text-white">
+              {isEdit ? "Annonce resoumise" : "Annonce soumise"}
+            </h2>
+            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+              {isEdit
+                ? "Vos modifications sont enregistrées. L'annonce repart en vérification."
+                : "Votre dossier a été analysé par l'IA de confiance UniHome."}
+            </p>
+            {createdAnnonce?.scoreConfiance != null && (
+              <p className="mt-3 font-mono text-sm tabular-nums text-zinc-600 dark:text-zinc-300">
+                score de confiance : {createdAnnonce.scoreConfiance}/100
+              </p>
+            )}
+            {st && (
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                Statut :{" "}
+                <span className="font-semibold text-zinc-900 dark:text-white">
+                  {statusLabels[st] || st}
                 </span>
               </p>
             )}
             <button
               onClick={() => navigate("/mes-annonces")}
-              className="btn-primary"
+              className={`${BTN_PRIMARY} mt-6`}
             >
               Voir mes annonces
             </button>
           </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isEdit && (loadingAnnonce || loadError))
+    return (
+      <DashboardLayout
+        sidebarLinks={sidebarLinks}
+        isDark={isDark}
+        onToggleTheme={onToggleTheme}
+      >
+        <div className="flex items-center justify-center min-h-[60vh]">
+          {loadingAnnonce ? (
+            <div className="flex items-center gap-3 font-mono text-sm text-zinc-500 dark:text-zinc-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              chargement de l'annonce…
+            </div>
+          ) : (
+            <div className="text-center max-w-md">
+              <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-4" />
+              <p className="text-zinc-700 dark:text-zinc-200 font-medium mb-6">
+                {loadError}
+              </p>
+              <button
+                onClick={() => navigate("/mes-annonces")}
+                className={BTN_PRIMARY}
+              >
+                Retour à mes annonces
+              </button>
+            </div>
+          )}
         </div>
       </DashboardLayout>
     );
@@ -617,22 +1114,37 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
       onToggleTheme={onToggleTheme}
     >
       <div className="mb-8">
-        <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white mb-1">
-          Publier une annonce
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-blue-600 dark:text-blue-400">
+          {isEdit ? "dossier · correction" : "dossier · nouvelle annonce"}
+        </p>
+        <h1 className="mt-1 font-geist text-2xl font-bold tracking-[-0.02em] text-zinc-950 dark:text-white">
+          {isEdit ? "Modifier l'annonce rejetée" : "Publier une annonce"}
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">
-          Créez le logement puis envoyez l'annonce complète au backend
+        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          {isEdit
+            ? "Corrigez votre annonce puis resoumettez-la : elle repassera la vérification automatique."
+            : "Chaque champ compte : l'IA de confiance analyse votre dossier à la soumission."}
         </p>
       </div>
+
+      {isEdit && editSource?.raisonStatut && (
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">Motif du rejet</p>
+            <p className="mt-0.5">{editSource.raisonStatut}</p>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-0 mb-8">
         {steps.map((label, index) => (
           <div key={label} className="flex items-center flex-1 last:flex-none">
             <div
-              className={`flex items-center gap-2 ${index + 1 <= step ? "text-primary-600 dark:text-primary-400" : "text-gray-400"}`}
+              className={`flex items-center gap-2 ${index + 1 <= step ? "text-blue-600 dark:text-blue-400" : "text-zinc-400 dark:text-zinc-500"}`}
             >
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${index + 1 < step ? "bg-primary-600 text-white" : index + 1 === step ? "border-2 border-primary-600 text-primary-600 dark:text-primary-400" : "border-2 border-gray-300 dark:border-white/20 text-gray-400"}`}
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-mono text-sm font-bold tabular-nums transition-all ${index + 1 < step ? "bg-blue-600 text-white" : index + 1 === step ? "border-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400" : "border-2 border-zinc-300 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500"}`}
               >
                 {index + 1 < step ? (
                   <CheckCircle className="w-4 h-4" />
@@ -646,442 +1158,521 @@ export default function PublierAnnonce({ isDark, onToggleTheme }) {
             </div>
             {index < steps.length - 1 && (
               <div
-                className={`flex-1 h-0.5 mx-3 ${index + 1 < step ? "bg-primary-600" : "bg-gray-200 dark:bg-white/10"}`}
+                className={`flex-1 h-0.5 mx-3 ${index + 1 < step ? "bg-blue-600" : "bg-zinc-200 dark:bg-zinc-800"}`}
               />
             )}
           </div>
         ))}
       </div>
 
-      <div className="glass-light rounded-2xl p-6">
-        {step === 1 && (
-          <div className="space-y-4">
-            <h2 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-4">
-              Informations du logement
-            </h2>
-            <input
-              type="text"
-              placeholder="Titre de l'annonce"
-              value={form.titre}
-              onChange={set("titre")}
-              className="input-field"
-            />
-            <div className="grid md:grid-cols-2 gap-4">
-              <select
-                value={form.typeLogement}
-                onChange={set("typeLogement")}
-                className="input-field"
-              >
-                <option value="">Type de logement</option>
-                {typeLogements.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={form.ville}
-                onChange={set("ville")}
-                className="input-field"
-              >
-                <option value="">
-                  {loadingUniversites
-                    ? "Chargement des villes..."
-                    : "Ville universitaire"}
-                </option>
-                {cityOptions.map((ville) => (
-                  <option key={ville} value={ville}>
-                    {ville}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {cityOptions.length === 0 && !loadingUniversites && (
-              <p className="text-sm text-red-500">
-                Aucune ville universitaire n'est disponible dans la base de données.
-              </p>
-            )}
-            <div className="flex flex-col gap-3 md:flex-row">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_290px]">
+        <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          {step === 1 && (
+            <div className="space-y-4">
+              <h2 className="font-geist font-bold text-lg tracking-[-0.01em] text-zinc-950 dark:text-white mb-4">
+                Informations du logement
+              </h2>
+              {isEdit && (
+                <p className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-300">
+                  Le logement lié (type, ville, adresse, superficie,
+                  localisation) n'est pas modifiable. Vous pouvez corriger le
+                  titre, le loyer, la description et remplacer le justificatif.
+                </p>
+              )}
               <input
                 type="text"
-                placeholder="Adresse complète"
-                value={form.adresse}
-                onChange={set("adresse")}
-                className="input-field flex-1"
+                placeholder="Titre de l'annonce"
+                value={form.titre}
+                onChange={set("titre")}
+                className={FIELD}
               />
-              <button
-                type="button"
-                onClick={searchAddressOnMap}
-                disabled={searchingAddress}
-                className="btn-ghost justify-center text-sm md:w-56"
-              >
-                {searchingAddress ? "Recherche..." : "Rechercher sur la carte"}
-              </button>
-            </div>
-            <div className="grid md:grid-cols-3 gap-4">
-              <input
-                type="number"
-                min="1"
-                step="0.1"
-                placeholder="Superficie (m2)"
-                value={form.superficie}
-                onChange={set("superficie")}
-                className="input-field"
-              />
-              <input
-                type="number"
-                min="1"
-                step="1"
-                placeholder="Loyer mensuel (MAD)"
-                value={form.loyer}
-                onChange={set("loyer")}
-                className="input-field"
-              />
-              <label className="input-field flex items-center gap-3 cursor-pointer">
+              <div className="grid md:grid-cols-2 gap-4">
+                <select
+                  value={form.typeLogement}
+                  onChange={set("typeLogement")}
+                  disabled={isEdit}
+                  className={`${FIELD} disabled:opacity-60`}
+                >
+                  <option value="">Type de logement</option>
+                  {typeLogements.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={form.ville}
+                  onChange={set("ville")}
+                  disabled={isEdit}
+                  className={`${FIELD} disabled:opacity-60`}
+                >
+                  <option value="">
+                    {loadingUniversites
+                      ? "Chargement des villes..."
+                      : "Ville universitaire"}
+                  </option>
+                  {cityOptions.map((ville) => (
+                    <option key={ville} value={ville}>
+                      {ville}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {cityOptions.length === 0 && !loadingUniversites && (
+                <p className="text-sm text-red-500">
+                  Aucune ville universitaire n'est disponible dans la base de
+                  données.
+                </p>
+              )}
+              <div className="flex flex-col gap-3 md:flex-row">
                 <input
-                  type="checkbox"
-                  checked={form.chargesIncluses}
-                  onChange={set("chargesIncluses")}
-                  className="w-4 h-4 accent-primary-600"
+                  type="text"
+                  placeholder="Adresse complète"
+                  value={form.adresse}
+                  onChange={set("adresse")}
+                  disabled={isEdit}
+                  className={`${FIELD} flex-1 disabled:opacity-60`}
                 />
-                <span>Charges incluses</span>
-              </label>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                Localisation du logement
-              </label>
-              <LocationPicker
-                latitude={form.latitude}
-                longitude={form.longitude}
-                mapCenter={selectedCityCenter}
-                onChange={setLocation}
+                {!isEdit && (
+                  <button
+                    type="button"
+                    onClick={searchAddressOnMap}
+                    disabled={searchingAddress}
+                    className={`${BTN_GHOST} md:w-56`}
+                  >
+                    {searchingAddress
+                      ? "Recherche..."
+                      : "Rechercher sur la carte"}
+                  </button>
+                )}
+              </div>
+              <div className="grid md:grid-cols-3 gap-4">
+                <input
+                  type="number"
+                  min="1"
+                  step="0.1"
+                  placeholder="Superficie (m2)"
+                  value={form.superficie}
+                  onChange={set("superficie")}
+                  disabled={isEdit}
+                  className={`${FIELD} disabled:opacity-60`}
+                />
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="Loyer mensuel (MAD)"
+                  value={form.loyer}
+                  onChange={set("loyer")}
+                  className={FIELD}
+                />
+                <label
+                  className={`${FIELD} flex items-center gap-3 cursor-pointer`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.chargesIncluses}
+                    onChange={set("chargesIncluses")}
+                    className="w-4 h-4 accent-blue-600"
+                  />
+                  <span>Charges incluses</span>
+                </label>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                  Localisation du logement
+                </label>
+                {isEdit ? (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    Localisation existante conservée
+                    {form.latitude && form.longitude
+                      ? ` (${form.latitude}, ${form.longitude})`
+                      : ""}
+                    .
+                  </p>
+                ) : (
+                  <>
+                    <LocationPicker
+                      latitude={form.latitude}
+                      longitude={form.longitude}
+                      mapCenter={selectedCityCenter}
+                      onChange={setLocation}
+                    />
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      La recherche place le point automatiquement. Vous pouvez
+                      cliquer sur la carte pour corriger la position exacte.
+                    </p>
+                  </>
+                )}
+              </div>
+              <textarea
+                rows={4}
+                placeholder="Description détaillée du logement..."
+                value={form.description}
+                onChange={set("description")}
+                className={`${FIELD} resize-none`}
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                La recherche place le point automatiquement. Vous pouvez cliquer
-                sur la carte pour corriger la position exacte.
-              </p>
-            </div>
-            <textarea
-              rows={4}
-              placeholder="Description détaillée du logement..."
-              value={form.description}
-              onChange={set("description")}
-              className="input-field resize-none"
-            />
-            <div className="rounded-3xl border border-primary-100 bg-primary-50/60 p-5 shadow-sm dark:border-primary-400/20 dark:bg-primary-500/10">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex gap-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-lg shadow-primary-600/25">
-                    <ShieldCheck className="h-6 w-6" />
+              <div className="rounded-3xl border border-blue-100 bg-blue-50/60 p-5 shadow-sm dark:border-blue-500/20 dark:bg-blue-500/10">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex gap-4">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/25">
+                      <ShieldCheck className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <label className="font-geist text-base font-bold tracking-[-0.01em] text-zinc-950 dark:text-white">
+                        Justificatif du logement
+                      </label>
+                      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
+                        {isEdit
+                          ? "Le justificatif est le critère le plus important du score de confiance. Si le rejet le mentionne, remplacez-le par un document plus clair — sinon l'actuel est conservé."
+                          : "Ajoutez un document qui prouve que le logement existe et qu'il est lié au propriétaire. Il est utilisé par l'IA et, si besoin, par l'équipe de modération."}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <label className="font-display text-base font-bold text-gray-900 dark:text-white">
-                      Justificatif du logement
-                    </label>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                      Ajoutez un document qui prouve que le logement existe et
-                      qu'il est lié au propriétaire. Il est utilisé par l'IA et,
-                      si besoin, par l'équipe de modération.
+                </div>
+
+                <div className="mt-4 grid gap-3 text-xs text-zinc-500 dark:text-zinc-400 md:grid-cols-3">
+                  <div className="rounded-2xl border border-white/70 bg-white/70 p-3 dark:border-zinc-700 dark:bg-zinc-900/60">
+                    <span className="font-semibold text-zinc-700 dark:text-zinc-200">
+                      Exemples acceptés
+                    </span>
+                    <p className="mt-1">
+                      Titre, contrat, quittance, facture ou attestation liée au
+                      logement.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/70 p-3 dark:border-zinc-700 dark:bg-zinc-900/60">
+                    <span className="font-semibold text-zinc-700 dark:text-zinc-200">
+                      Important
+                    </span>
+                    <p className="mt-1">
+                      Le nom et/ou l'adresse visibles renforcent fortement le
+                      score de confiance.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/70 p-3 dark:border-zinc-700 dark:bg-zinc-900/60">
+                    <span className="font-semibold text-zinc-700 dark:text-zinc-200">
+                      Formats
+                    </span>
+                    <p className="mt-1">
+                      PDF, JPG ou PNG. Évitez les documents flous, coupés ou
+                      illisibles.
                     </p>
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-4 grid gap-3 text-xs text-gray-500 dark:text-gray-400 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/70 bg-white/70 p-3 dark:border-white/10 dark:bg-white/5">
-                  <span className="font-semibold text-gray-700 dark:text-gray-200">
-                    Exemples acceptés
-                  </span>
-                  <p className="mt-1">
-                    Titre, contrat, quittance, facture ou attestation liée au
-                    logement.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/70 bg-white/70 p-3 dark:border-white/10 dark:bg-white/5">
-                  <span className="font-semibold text-gray-700 dark:text-gray-200">
-                    Important
-                  </span>
-                  <p className="mt-1">
-                    Le nom et/ou l'adresse visibles renforcent fortement le
-                    score de confiance.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/70 bg-white/70 p-3 dark:border-white/10 dark:bg-white/5">
-                  <span className="font-semibold text-gray-700 dark:text-gray-200">
-                    Formats
-                  </span>
-                  <p className="mt-1">
-                    PDF, JPG ou PNG. Évitez les documents flous, coupés ou
-                    illisibles.
-                  </p>
-                </div>
-              </div>
-
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() =>
-                  document.getElementById("justificatif-input")?.click()
-                }
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    document.getElementById("justificatif-input")?.click();
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    document.getElementById("justificatif-input")?.click()
                   }
-                }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      document.getElementById("justificatif-input")?.click();
+                    }
+                  }}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    const file = Array.from(event.dataTransfer.files || [])[0];
+                    if (file) selectJustificatif(file);
+                  }}
+                  className="mt-4 cursor-pointer rounded-3xl border-2 border-dashed border-blue-200 bg-white/80 p-6 text-center transition-all hover:border-blue-500 hover:bg-white dark:border-blue-500/30 dark:bg-zinc-950/50 dark:hover:border-blue-400"
+                >
+                  <input
+                    id="justificatif-input"
+                    type="file"
+                    accept="image/*,.pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      selectJustificatif(e.target.files?.[0] || null);
+                      e.target.value = "";
+                    }}
+                  />
+                  {justificatifFile ? (
+                    <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:text-left">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300">
+                          <FileCheck2 className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-zinc-900 dark:text-white">
+                            {justificatifFile.name}
+                          </p>
+                          <p className="mt-1 font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                            {(justificatifFile.size / 1024 / 1024).toFixed(2)}{" "}
+                            MB · cliquez pour remplacer le document
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setJustificatifFile(null);
+                          const input =
+                            document.getElementById("justificatif-input");
+                          if (input) input.value = "";
+                        }}
+                        className={`${BTN_GHOST} px-3 py-1.5 text-xs`}
+                      >
+                        Retirer
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <Upload className="mx-auto mb-3 h-10 w-10 text-blue-500" />
+                      <p className="font-semibold text-zinc-900 dark:text-white">
+                        {isEdit
+                          ? "Justificatif actuel conservé"
+                          : "Glissez le justificatif ici"}
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                        {isEdit
+                          ? "Glissez ou cliquez pour le remplacer par un fichier PDF, JPG ou PNG plus lisible"
+                          : "ou cliquez pour choisir un fichier PDF, JPG ou PNG"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4">
+              <h2 className="font-geist font-bold text-lg tracking-[-0.01em] text-zinc-950 dark:text-white mb-4">
+                Photos du logement
+              </h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Entre 2 et 10 photos.
+              </p>
+              <div
+                className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl p-10 text-center hover:border-blue-400 transition-colors cursor-pointer"
+                onClick={() => document.getElementById("photo-input").click()}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => {
                   event.preventDefault();
-                  const file = Array.from(event.dataTransfer.files || []).find(
-                    (item) =>
-                      item.type.startsWith("image/") ||
-                      item.type === "application/pdf",
-                  );
-                  if (file) {
-                    setJustificatifFile(file);
-                    setError("");
-                  }
+                  handlePhotos(event.dataTransfer.files);
                 }}
-                className="mt-4 cursor-pointer rounded-3xl border-2 border-dashed border-primary-200 bg-white/80 p-6 text-center transition-all hover:border-primary-500 hover:bg-white dark:border-primary-400/30 dark:bg-dark-900/50 dark:hover:border-primary-300"
               >
+                <Upload className="w-10 h-10 text-zinc-400 mx-auto mb-3" />
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-1">
+                  Glissez vos photos ici
+                </p>
+                <p className="text-zinc-400 dark:text-zinc-500 text-xs">
+                  JPG, PNG - Max 10 photos. Les photos sont automatiquement
+                  optimisées avant l'envoi.
+                </p>
                 <input
-                  id="justificatif-input"
+                  id="photo-input"
                   type="file"
-                  accept="image/*,.pdf"
+                  multiple
+                  accept="image/*"
                   className="hidden"
-                  onChange={(e) => {
-                    setJustificatifFile(e.target.files?.[0] || null);
-                    setError("");
+                  onChange={(event) => {
+                    handlePhotos(event.target.files);
+                    event.target.value = "";
                   }}
                 />
-                {justificatifFile ? (
-                  <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:text-left">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300">
-                        <FileCheck2 className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          {justificatifFile.name}
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          {(justificatifFile.size / 1024 / 1024).toFixed(2)} MB
-                          - Cliquez pour remplacer le document
-                        </p>
+              </div>
+              {compressingCount > 0 && (
+                <div className="flex items-center gap-2 font-mono text-xs text-blue-600 dark:text-blue-400">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  optimisation de {compressingCount} photo
+                  {compressingCount > 1 ? "s" : ""}…
+                </div>
+              )}
+              {photoNotice && (
+                <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{photoNotice}</span>
+                </div>
+              )}
+              {photos.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                  {photos.map((photo, index) => (
+                    <div
+                      key={`${photo.name}-${index}`}
+                      className="relative aspect-square rounded-xl overflow-hidden group"
+                    >
+                      <img
+                        src={photo.url}
+                        alt={photo.name}
+                        className="w-full h-full object-cover"
+                      />
+                      {index === 0 && (
+                        <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-blue-600/90 px-2 py-0.5 text-[10px] font-semibold text-white">
+                          <Star className="h-3 w-3 fill-current" /> Principale
+                        </span>
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                        {index !== 0 && (
+                          <button
+                            type="button"
+                            onClick={() => makePrincipale(index)}
+                            title="Définir comme photo principale"
+                            className="rounded-full bg-white/20 p-2 text-white transition-colors hover:bg-blue-500"
+                          >
+                            <Star className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(index)}
+                          title="Supprimer la photo"
+                          className="rounded-full bg-white/20 p-2 text-white transition-colors hover:bg-red-500"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setJustificatifFile(null);
-                        const input =
-                          document.getElementById("justificatif-input");
-                        if (input) input.value = "";
-                      }}
-                      className="btn-ghost text-sm"
-                    >
-                      Retirer
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <Upload className="mx-auto mb-3 h-10 w-10 text-primary-500" />
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      Glissez le justificatif ici
-                    </p>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      ou cliquez pour choisir un fichier PDF, JPG ou PNG
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-4">
-            <h2 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-4">
-              Photos du logement
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Entre 2 et 10 photos.
-            </p>
-            <div
-              className="border-2 border-dashed border-gray-300 dark:border-white/20 rounded-2xl p-10 text-center hover:border-primary-400 transition-colors cursor-pointer"
-              onClick={() => document.getElementById("photo-input").click()}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={(event) => {
-                event.preventDefault();
-                handlePhotos(event.dataTransfer.files);
-              }}
-            >
-              <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">
-                Glissez vos photos ici
-              </p>
-              <p className="text-gray-400 text-xs">JPG, PNG - Max 10 photos</p>
-              <input
-                id="photo-input"
-                type="file"
-                multiple
-                accept="image/*"
-                className="hidden"
-                onChange={(event) => handlePhotos(event.target.files)}
-              />
-            </div>
-            {photos.length > 0 && (
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                {photos.map((photo, index) => (
-                  <div
-                    key={`${photo.name}-${index}`}
-                    className="relative aspect-square rounded-xl overflow-hidden group"
-                  >
-                    <img
-                      src={photo.url}
-                      alt={photo.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(index)}
-                      className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                    >
-                      <X className="w-5 h-5 text-white" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <p className="text-xs text-gray-400">{photos.length}/10 photos</p>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div>
-            <h2 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-4">
-              Équipements disponibles
-            </h2>
-            {loadingEquipements ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Chargement des équipements...
-              </p>
-            ) : equipements.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Aucun équipement n'est configuré dans la base.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {equipements.map((equipement) => (
-                  <button
-                    key={equipement.id}
-                    type="button"
-                    onClick={() => toggleEquipement(equipement.id)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${selectedEquipementIds.includes(equipement.id) ? "bg-primary-600 border-primary-600 text-white" : "border-gray-200 dark:border-white/20 text-gray-600 dark:text-gray-300 hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400"}`}
-                  >
-                    {equipement.libelle}
-                  </button>
-                ))}
-              </div>
-            )}
-            {selectedEquipementIds.length > 0 && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                {selectedEquipementIds.length} équipement
-                {selectedEquipementIds.length > 1 ? "s" : ""} sélectionné
-                {selectedEquipementIds.length > 1 ? "s" : ""}
-              </p>
-            )}
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="space-y-4">
-            <h2 className="font-display font-bold text-lg text-gray-900 dark:text-white mb-2">
-              Contacts
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Au moins un moyen de contact est obligatoire.
-            </p>
-            <div className="space-y-3">
-              {[
-                {
-                  key: "telephone",
-                  icon: Phone,
-                  placeholder: "+212 6 XX XX XX XX",
-                },
-                {
-                  key: "whatsapp",
-                  icon: MessageCircle,
-                  placeholder: "+212 6 XX XX XX XX",
-                },
-                { key: "email", icon: Mail, placeholder: "votre@email.com" },
-                {
-                  key: "facebook",
-                  icon: MapPin,
-                  placeholder: "Facebook URL ou @pseudo",
-                },
-                {
-                  key: "instagram",
-                  icon: MapPin,
-                  placeholder: "Instagram URL ou @pseudo",
-                },
-              ].map(({ key, icon: Icon, placeholder }) => (
-                <div key={key} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
-                    <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder={placeholder}
-                    value={form[key]}
-                    onChange={set(key)}
-                    className="input-field flex-1"
-                  />
+                  ))}
                 </div>
-              ))}
+              )}
+              <p className="font-mono text-xs text-zinc-400 dark:text-zinc-500">
+                {photos.length}/10 photos
+                {photos.length > 0 &&
+                  " — la première photo est la couverture de l'annonce (survolez une photo pour la définir comme principale)."}
+              </p>
             </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="mt-6 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-white/10">
-          {step > 1 ? (
-            <button
-              type="button"
-              onClick={() => setStep((prev) => prev - 1)}
-              className="btn-ghost text-sm"
-            >
-              Étape précédente
-            </button>
-          ) : (
-            <span />
           )}
-          {step < 4 ? (
-            <button
-              type="button"
-              onClick={() => setStep((prev) => prev + 1)}
-              className="btn-primary flex items-center gap-2"
-            >
-              Étape suivante <ChevronRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={publish}
-              disabled={submitting}
-              className="btn-primary flex items-center gap-2"
-            >
-              {submitting ? "Publication en cours..." : "Publier l'annonce"}
-            </button>
+
+          {step === 3 && (
+            <div>
+              <h2 className="font-geist font-bold text-lg tracking-[-0.01em] text-zinc-950 dark:text-white mb-4">
+                Équipements disponibles
+              </h2>
+              {loadingEquipements ? (
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Chargement des équipements...
+                </p>
+              ) : equipements.length === 0 ? (
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Aucun équipement n'est configuré dans la base.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {equipements.map((equipement) => (
+                    <button
+                      key={equipement.id}
+                      type="button"
+                      onClick={() => toggleEquipement(equipement.id)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${selectedEquipementIds.includes(equipement.id) ? "bg-blue-600 border-blue-600 text-white" : "border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400"}`}
+                    >
+                      {equipement.libelle}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {selectedEquipementIds.length > 0 && (
+                <p className="font-mono text-xs text-zinc-500 dark:text-zinc-400 mt-4">
+                  {selectedEquipementIds.length} équipement
+                  {selectedEquipementIds.length > 1 ? "s" : ""} sélectionné
+                  {selectedEquipementIds.length > 1 ? "s" : ""}
+                </p>
+              )}
+            </div>
           )}
+
+          {step === 4 && (
+            <div className="space-y-4">
+              <h2 className="font-geist font-bold text-lg tracking-[-0.01em] text-zinc-950 dark:text-white mb-2">
+                Contacts
+              </h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+                Au moins un moyen de contact est obligatoire.
+              </p>
+              <div className="space-y-3">
+                {[
+                  {
+                    key: "telephone",
+                    icon: Phone,
+                    placeholder: "+212 6 XX XX XX XX",
+                  },
+                  {
+                    key: "whatsapp",
+                    icon: MessageCircle,
+                    placeholder: "+212 6 XX XX XX XX",
+                  },
+                  { key: "email", icon: Mail, placeholder: "votre@email.com" },
+                  {
+                    key: "facebook",
+                    icon: MapPin,
+                    placeholder: "Facebook URL ou @pseudo",
+                  },
+                  {
+                    key: "instagram",
+                    icon: MapPin,
+                    placeholder: "Instagram URL ou @pseudo",
+                  },
+                ].map(({ key, icon: Icon, placeholder }) => (
+                  <div key={key} className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={placeholder}
+                      value={form[key]}
+                      onChange={set(key)}
+                      className={`${FIELD} flex-1`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-6 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+            {step > 1 ? (
+              <button
+                type="button"
+                onClick={() => setStep((prev) => prev - 1)}
+                className={BTN_GHOST}
+              >
+                Étape précédente
+              </button>
+            ) : (
+              <span />
+            )}
+            {step < 4 ? (
+              <button type="button" onClick={goNext} className={BTN_PRIMARY}>
+                Étape suivante <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={publish}
+                disabled={submitting}
+                className={BTN_PRIMARY}
+              >
+                {submitting
+                  ? isEdit
+                    ? "Resoumission en cours..."
+                    : "Publication en cours..."
+                  : isEdit
+                    ? "Resoumettre l'annonce"
+                    : "Publier l'annonce"}
+              </button>
+            )}
+          </div>
         </div>
+
+        <DossierMeter
+          form={form}
+          photos={photos}
+          justificatifFile={justificatifFile}
+          isEdit={isEdit}
+        />
       </div>
     </DashboardLayout>
   );

@@ -1,26 +1,43 @@
-export default function StatCard({ icon: Icon, label, value, color = 'indigo', trend }) {
-  const colors = {
-    indigo: 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-    green: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-    orange: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
-    red: 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400',
-    purple: 'bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400',
-  }
+export default function StatCard({
+  icon: Icon,
+  label,
+  value,
+  color = "blue",
+  trend,
+}) {
+  // Control Room world: blue is the only brand accent; amber/red/emerald
+  // appear only when the stat itself is a real state (pending, reports, verified).
+  const tones = {
+    blue: "bg-blue-50 text-blue-600",
+    indigo: "bg-blue-50 text-blue-600",
+    purple: "bg-blue-50 text-blue-600",
+    zinc: "bg-zinc-100 text-zinc-600",
+    green: "bg-emerald-50 text-emerald-600",
+    orange: "bg-amber-50 text-amber-600",
+    red: "bg-red-50 text-red-600",
+  };
 
   return (
-    <div className="glass-light rounded-2xl p-6 card-hover">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colors[color]}`}>
-          <Icon className="w-6 h-6" />
+    <div className="rounded-2xl border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-[0_16px_48px_-24px_rgba(9,9,11,0.2)] sm:p-6">
+      <div className="mb-4 flex items-start justify-between">
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-lg ${tones[color] || tones.blue}`}
+        >
+          <Icon className="h-5 w-5" strokeWidth={2} />
         </div>
         {trend && (
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${trend > 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'}`}>
-            {trend > 0 ? '+' : ''}{trend}%
+          <span
+            className={`rounded-full px-2 py-1 text-xs font-medium ${trend > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}
+          >
+            {trend > 0 ? "+" : ""}
+            {trend}%
           </span>
         )}
       </div>
-      <p className="text-2xl font-display font-bold text-gray-900 dark:text-white">{value}</p>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-body">{label}</p>
+      <p className="font-geist text-2xl font-bold tracking-[-0.01em] text-zinc-950 tabular-nums">
+        {value}
+      </p>
+      <p className="mt-1 font-geist text-sm text-zinc-500">{label}</p>
     </div>
-  )
+  );
 }

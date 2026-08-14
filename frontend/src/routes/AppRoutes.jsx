@@ -16,6 +16,7 @@ import ConfirmEmail from "../pages/public/ConfirmEmail";
 import ScoreRejet from "../pages/public/ScoreRejet";
 import ForgotPassword from "../pages/public/ForgotPassword";
 import ResetPassword from "../pages/public/ResetPassword";
+import NotFound from "../pages/public/NotFound";
 
 // Student pages
 import DashboardEtudiant from "../pages/student/DashboardEtudiant";
@@ -165,6 +166,18 @@ export default function AppRoutes({ isDark, onToggleTheme }) {
         }
       />
       <Route
+        path="/mes-annonces/:annonceId/modifier"
+        element={
+          <PrivateRoute roles={["PROPRIETAIRE"]}>
+            <PublierAnnonce
+              mode="edit"
+              isDark={isDark}
+              onToggleTheme={onToggleTheme}
+            />
+          </PrivateRoute>
+        }
+      />
+      <Route
         path="/profil-proprietaire"
         element={
           <PrivateRoute roles={["PROPRIETAIRE"]}>
@@ -204,6 +217,16 @@ export default function AppRoutes({ isDark, onToggleTheme }) {
           <PrivateRoute roles={["ADMIN"]}>
             <AdminUtilisateurs isDark={isDark} onToggleTheme={onToggleTheme} />
           </PrivateRoute>
+        }
+      />
+
+      {/* 404 - toute URL inconnue */}
+      <Route
+        path="*"
+        element={
+          <MainLayout isDark={isDark} onToggleTheme={onToggleTheme}>
+            <NotFound />
+          </MainLayout>
         }
       />
     </Routes>

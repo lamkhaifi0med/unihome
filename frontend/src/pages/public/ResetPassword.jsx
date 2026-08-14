@@ -4,6 +4,31 @@ import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
 import Logo from "../../components/ui/Logo";
 import { authApi } from "../../api/authApi";
 
+const FIELD =
+  "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white dark:placeholder-zinc-500 dark:focus:border-blue-500";
+const BTN =
+  "inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)] transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50";
+
+function AuthShell({ children }) {
+  return (
+    <div className="relative flex min-h-screen items-center justify-center bg-[#fafafa] p-4 dark:bg-zinc-950">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 [background-image:radial-gradient(rgba(113,113,122,0.14)_1px,transparent_1px)] [background-size:22px_22px] dark:[background-image:radial-gradient(rgba(161,161,170,0.09)_1px,transparent_1px)]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-0 h-72 w-[560px] -translate-x-1/2 rounded-full bg-blue-500/10 blur-3xl"
+      />
+      <div className="relative z-10 w-full max-w-md">
+        <div className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-[0_24px_60px_-30px_rgba(9,9,11,0.25)] dark:border-zinc-800 dark:bg-zinc-900">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -19,24 +44,24 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="min-h-screen relative flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950" />
-        <div className="relative z-10 w-full max-w-md">
-          <div className="glass rounded-3xl p-8 border border-white/15 shadow-2xl text-center space-y-4">
-            <AlertCircle className="w-14 h-14 text-red-400 mx-auto" />
-            <h2 className="text-white font-semibold text-lg">Lien invalide</h2>
-            <p className="text-white/60 text-sm">
-              Ce lien de réinitialisation est invalide ou a expiré.
-            </p>
-            <Link
-              to="/forgot-password"
-              className="btn-primary w-full justify-center inline-flex"
-            >
-              Demander un nouveau lien
-            </Link>
+      <AuthShell>
+        <div className="space-y-4 text-center">
+          <div className="flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10">
+              <AlertCircle className="h-8 w-8 text-red-500" />
+            </div>
           </div>
+          <h2 className="font-geist text-lg font-bold tracking-[-0.01em] text-zinc-950 dark:text-white">
+            Lien invalide
+          </h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Ce lien de réinitialisation est invalide ou a expiré.
+          </p>
+          <Link to="/forgot-password" className={BTN}>
+            Demander un nouveau lien
+          </Link>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
@@ -77,112 +102,99 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950" />
-      <div className="orb orb-purple w-96 h-96 top-10 left-10 opacity-20" />
-      <div className="orb orb-blue w-80 h-80 bottom-10 right-20 opacity-20" />
+    <AuthShell>
+      <div className="mb-8 text-center">
+        <div className="mb-4 flex justify-center">
+          <Logo size="lg" />
+        </div>
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-blue-600 dark:text-blue-400">
+          choisissez un nouveau mot de passe
+        </p>
+      </div>
 
-      <div className="relative z-10 w-full max-w-md">
-        <div className="glass rounded-3xl p-8 border border-white/15 shadow-2xl">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <Logo size="lg" />
+      {success ? (
+        <div className="space-y-4 text-center">
+          <div className="flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+              <CheckCircle2 className="h-8 w-8 text-emerald-500" />
             </div>
-            <p className="text-white/60 text-sm">
-              Choisissez un nouveau mot de passe
-            </p>
+          </div>
+          <h2 className="font-geist text-lg font-bold tracking-[-0.01em] text-zinc-950 dark:text-white">
+            Mot de passe mis à jour
+          </h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Votre mot de passe a été réinitialisé avec succès.
+          </p>
+          <button onClick={() => navigate("/login")} className={`${BTN} mt-4`}>
+            Se connecter
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <input
+              type={showPass ? "text" : "password"}
+              placeholder="Nouveau mot de passe"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={`${FIELD} pl-11 pr-12`}
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-600 dark:hover:text-zinc-200"
+            >
+              {showPass ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
           </div>
 
-          {success ? (
-            <div className="text-center space-y-4">
-              <div className="flex justify-center">
-                <CheckCircle2 className="w-14 h-14 text-emerald-400" />
-              </div>
-              <h2 className="text-white font-semibold text-lg">
-                Mot de passe mis à jour !
-              </h2>
-              <p className="text-white/60 text-sm">
-                Votre mot de passe a été réinitialisé avec succès.
-              </p>
-              <button
-                onClick={() => navigate("/login")}
-                className="btn-primary w-full justify-center mt-4"
-              >
-                Se connecter
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-white/40" />
-                <input
-                  type={showPass ? "text" : "password"}
-                  placeholder="Nouveau mot de passe"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-field pl-11 pr-12"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
-                >
-                  {showPass ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-white/40" />
-                <input
-                  type={showConfirm ? "text" : "password"}
-                  placeholder="Confirmer le mot de passe"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className="input-field pl-11 pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
-                >
-                  {showConfirm ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-
-              {error && (
-                <div className="text-center space-y-1">
-                  <p className="text-red-400 text-sm">{error}</p>
-                  {error.includes("expiré") && (
-                    <Link
-                      to="/forgot-password"
-                      className="text-indigo-400 hover:text-indigo-300 text-sm underline"
-                    >
-                      Demander un nouveau lien
-                    </Link>
-                  )}
-                </div>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+            <input
+              type={showConfirm ? "text" : "password"}
+              placeholder="Confirmer le mot de passe"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className={`${FIELD} pl-11 pr-12`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm(!showConfirm)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-600 dark:hover:text-zinc-200"
+            >
+              {showConfirm ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
               )}
+            </button>
+          </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary w-full justify-center mt-2"
-              >
-                {loading ? "Mise à jour..." : "Réinitialiser le mot de passe"}
-              </button>
-            </form>
+          {error && (
+            <div className="space-y-1 text-center">
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              {error.includes("expiré") && (
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-blue-600 underline hover:text-blue-700 dark:text-blue-400"
+                >
+                  Demander un nouveau lien
+                </Link>
+              )}
+            </div>
           )}
-        </div>
-      </div>
-    </div>
+
+          <button type="submit" disabled={loading} className={`${BTN} mt-2`}>
+            {loading ? "Mise à jour..." : "Réinitialiser le mot de passe"}
+          </button>
+        </form>
+      )}
+    </AuthShell>
   );
 }

@@ -74,7 +74,26 @@ public class AdminAnnonceController {
         Annonce annonce = annonceRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Annonce introuvable"));
         annonce.setStatut(StatutAnnonceEnum.VALIDEE);
+        // Coherence d'affichage : une annonce validee manuellement ne doit pas
+        // rester affichee "Risquee" avec un score IA bas cote etudiants.
+        Short score = annonce.getScoreConfiance();
+        if (score == null || score < 70) {
+            annonce.setScoreConfiance((short) 70);
+        }
+        annonce.setRaisonStatut("Validée manuellement par l'équipe UniHome.");
         annonceRepository.save(annonce);
+
+        Proprietaire proprietaire = (Proprietaire) annonce.getLogement().getProprietaire();
+        try {
+            emailService.sendAnnonceDecisionEmail(
+                    proprietaire.getEmail(),
+                    annonce.getTitre(),
+                    StatutAnnonceEnum.VALIDEE,
+                    annonce.getScoreConfiance(),
+                    "Validée manuellement par l'équipe UniHome.");
+        } catch (Exception ignored) {
+            // Email failure must never break the moderation action
+        }
         return ResponseEntity.ok().build();
     }
 

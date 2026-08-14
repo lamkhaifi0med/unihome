@@ -42,6 +42,17 @@ public class Utilisateur {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    /** Motif de suspension du compte, montre a l'utilisateur au login. */
+    @Column(name = "raison_suspension", columnDefinition = "TEXT")
+    private String raisonSuspension;
+
+    /** Message d'appel envoye par l'utilisateur suspendu. */
+    @Column(name = "appel_message", columnDefinition = "TEXT")
+    private String appelMessage;
+
+    @Column(name = "appel_date")
+    private LocalDateTime appelDate;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, insertable = false, updatable = false)
     private RoleEnum role;

@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import Sidebar from "../components/layout/Sidebar";
 import Logo from "../components/ui/Logo";
-import ThemeToggle from "../components/ui/ThemeToggle";
 import ChatbotWidget from "../components/chatbot/ChatbotWidget";
 
 export default function DashboardLayout({
@@ -22,42 +21,55 @@ export default function DashboardLayout({
   ].some((path) => location.pathname.startsWith(path));
 
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-dark-900">
+    <div className="flex min-h-screen bg-[#fafafa] font-geist text-zinc-950 antialiased dark:bg-zinc-950 dark:text-zinc-50">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex">
-        <Sidebar links={sidebarLinks} />
+        <Sidebar
+          links={sidebarLinks}
+          isDark={isDark}
+          onToggleTheme={onToggleTheme}
+        />
       </div>
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex md:hidden">
           <div
-            className="fixed inset-0 bg-black/50"
+            className="fixed inset-0 bg-zinc-950/40"
             onClick={() => setSidebarOpen(false)}
           />
           <div className="relative z-10 w-64">
-            <Sidebar links={sidebarLinks} />
+            <Sidebar
+              links={sidebarLinks}
+              isDark={isDark}
+              onToggleTheme={onToggleTheme}
+            />
           </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Fermer le menu"
+            className="relative z-10 mt-4 ml-3 flex h-9 w-9 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <div className="flex min-h-screen flex-1 flex-col overflow-hidden">
         {/* Mobile header */}
-        <header className="md:hidden sticky top-0 z-40 glass-light border-b border-gray-200 dark:border-white/10 flex items-center justify-between px-4 h-14">
+        <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 backdrop-blur md:hidden dark:border-zinc-800 dark:bg-zinc-900/90">
           <Logo size="sm" />
-          <div className="flex items-center gap-2">
-            <ThemeToggle isDark={isDark} onToggle={onToggleTheme} />
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Ouvrir le menu"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </header>
 
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="max-w-6xl mx-auto">{children}</div>
+        <main className="flex-1 overflow-auto p-5 sm:p-8">
+          <div className="mx-auto max-w-6xl">{children}</div>
         </main>
       </div>
       {showOwnerChatbot && (

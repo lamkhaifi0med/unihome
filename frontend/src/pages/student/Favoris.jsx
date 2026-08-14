@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import {
-  BadgeCheck,
   Heart,
   Home,
   Search,
   User,
   MessageCircle,
   Loader2,
-  MapPin,
-  Phone,
-  ShieldCheck,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import AnnonceCard from "../../components/listing/AnnonceCard";
 import { useFavoris } from "../../hooks/useFavoris";
 import { searchApi } from "../../api/searchApi";
 
@@ -24,110 +22,11 @@ const sidebarLinks = [
   { to: "/chatbot", label: "Assistant IA", icon: MessageCircle },
 ];
 
-function getScoreLabel(score) {
-  if (score >= 70) return "Annonce sérieuse";
-  if (score >= 40) return "À vérifier";
-  return "Annonce risquée";
-}
-
-function getScoreClass(score) {
-  if (score >= 70) return "bg-emerald-500";
-  if (score >= 40) return "bg-amber-500";
-  return "bg-rose-500";
-}
-
-function FavoriteCard({ annonce, onRemove }) {
-  const images = annonce.photos || annonce.images || [];
-  const score = Number(annonce.scoreConfiance || 0);
-  const price = Number(annonce.loyer ?? annonce.prix ?? 0).toLocaleString(
-    "fr-FR",
-  );
-  const addressText = [annonce.ville, annonce.adresse]
-    .filter(Boolean)
-    .join(" · ");
-
-  return (
-    <article className="group overflow-hidden rounded-[1.75rem] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-xl hover:shadow-primary-500/10 dark:border-white/10 dark:bg-white/[0.04]">
-      <div className="relative aspect-[16/11] overflow-hidden bg-primary-50 dark:bg-white/5">
-        <Link to={`/annonces/${annonce.id}`} className="absolute inset-0">
-          {images[0] ? (
-            <img
-              src={images[0]}
-              alt={annonce.titre}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-primary-300">
-              <Home className="h-12 w-12" />
-            </div>
-          )}
-        </Link>
-
-        <button
-          type="button"
-          onClick={() => onRemove(annonce.id)}
-          className="absolute right-3 top-3 rounded-full bg-white p-2 text-pink-500 shadow-lg transition-transform hover:scale-105 dark:bg-slate-900"
-          aria-label="Retirer de mes favoris"
-        >
-          <Heart className="h-4 w-4 fill-current" />
-        </button>
-
-        <div className="absolute bottom-3 left-3 right-3">
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white shadow-md ${getScoreClass(score)}`}
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Confiance {score} · {getScoreLabel(score)}
-          </span>
-        </div>
-      </div>
-
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <Link to={`/annonces/${annonce.id}`}>
-              <h2 className="line-clamp-2 font-display text-lg font-bold leading-snug text-gray-900 transition-colors hover:text-primary-600 dark:text-white">
-                {annonce.titre}
-              </h2>
-            </Link>
-            <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-              <MapPin className="h-4 w-4 shrink-0" />
-              <span className="line-clamp-1">
-                {addressText || "Logement proche campus"}
-              </span>
-            </div>
-          </div>
-
-          <div className="shrink-0 whitespace-nowrap text-right font-display text-xl font-bold text-primary-600 dark:text-primary-300">
-            {price} DH
-          </div>
-        </div>
-
-        <div className="mt-5 flex items-center justify-between gap-4 border-t border-gray-100 pt-4 text-sm dark:border-white/10">
-          <div
-            className={`flex min-w-0 items-center gap-1.5 ${annonce.proprietaireVerifie ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400"}`}
-          >
-            <BadgeCheck className="h-4 w-4 shrink-0" />
-            <span className="line-clamp-1">
-              {annonce.proprietaireVerifie
-                ? "Propriétaire vérifié"
-                : "Propriétaire à confirmer"}
-            </span>
-          </div>
-          <div className="flex shrink-0 items-center gap-1.5 text-gray-500 dark:text-gray-400">
-            <Phone className="h-4 w-4" />
-            Contact
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-
 export default function Favoris({ isDark, onToggleTheme }) {
-  const { favoris, loadingFavoris, toggleFavori } = useFavoris();
+  const { favoris, loadingFavoris } = useFavoris();
   const [annonces, setAnnonces] = useState([]);
   const [loadingAnnonces, setLoadingAnnonces] = useState(true);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     let mounted = true;
@@ -154,6 +53,23 @@ export default function Favoris({ isDark, onToggleTheme }) {
     );
   }, [annonces, favoris]);
 
+  const stats = useMemo(() => {
+    if (favsAnnonces.length === 0) return null;
+    const loyers = favsAnnonces
+      .map((a) => Number(a.loyer || 0))
+      .filter((v) => v > 0);
+    const scores = favsAnnonces
+      .map((a) => Number(a.scoreConfiance || 0))
+      .filter((v) => v > 0);
+    return {
+      minLoyer: loyers.length ? Math.min(...loyers) : null,
+      maxLoyer: loyers.length ? Math.max(...loyers) : null,
+      avgScore: scores.length
+        ? Math.round(scores.reduce((s, v) => s + v, 0) / scores.length)
+        : null,
+    };
+  }, [favsAnnonces]);
+
   const loading = loadingFavoris || loadingAnnonces;
 
   return (
@@ -162,50 +78,91 @@ export default function Favoris({ isDark, onToggleTheme }) {
       isDark={isDark}
       onToggleTheme={onToggleTheme}
     >
-      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <motion.div
+        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"
+      >
         <div>
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-primary-500 dark:text-primary-300">
-            Espace étudiant
-          </p>
-          <h1 className="font-display text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="font-geist text-2xl font-bold tracking-[-0.02em] text-zinc-950 dark:text-zinc-50">
             Mes favoris
           </h1>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {favsAnnonces.length} annonce{favsAnnonces.length > 1 ? "s" : ""}{" "}
-            sauvegardée{favsAnnonces.length > 1 ? "s" : ""}
+          <p className="mt-1.5 font-mono text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="font-semibold text-zinc-900 dark:text-white">
+              {favsAnnonces.length}
+            </span>{" "}
+            annonce{favsAnnonces.length > 1 ? "s" : ""} sauvegardée
+            {favsAnnonces.length > 1 ? "s" : ""}
+            {stats?.minLoyer != null && (
+              <>
+                {" "}
+                <span className="text-zinc-300 dark:text-zinc-600">|</span>{" "}
+                <span className="tabular-nums">
+                  {stats.minLoyer === stats.maxLoyer
+                    ? `${stats.minLoyer.toLocaleString("fr-FR")} MAD`
+                    : `${stats.minLoyer.toLocaleString("fr-FR")}–${stats.maxLoyer.toLocaleString("fr-FR")} MAD`}
+                </span>
+              </>
+            )}
+            {stats?.avgScore != null && (
+              <>
+                {" "}
+                <span className="text-zinc-300 dark:text-zinc-600">|</span>{" "}
+                score moyen{" "}
+                <span className="font-semibold tabular-nums text-zinc-900 dark:text-white">
+                  {stats.avgScore}/100
+                </span>
+              </>
+            )}
           </p>
         </div>
-        <Link to="/search" className="btn-primary w-fit">
+        <Link
+          to="/search"
+          className="inline-flex w-fit items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)] transition-colors hover:bg-blue-700"
+        >
+          <Search className="h-4 w-4" />
           Rechercher plus
         </Link>
-      </div>
+      </motion.div>
 
       {loading ? (
-        <div className="glass-light flex h-72 items-center justify-center rounded-2xl text-gray-500 dark:text-gray-400">
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          Chargement des favoris...
+        <div className="flex h-72 items-center justify-center rounded-2xl border border-zinc-200 bg-white font-mono text-xs text-zinc-400 dark:border-zinc-800 dark:bg-zinc-900">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          chargement des favoris…
         </div>
       ) : favsAnnonces.length === 0 ? (
-        <div className="glass-light rounded-2xl p-16 text-center">
-          <Heart className="mx-auto mb-5 h-16 w-16 text-gray-300 dark:text-gray-600" />
-          <h3 className="font-display mb-2 text-xl font-semibold text-gray-500 dark:text-gray-400">
+        <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-16 text-center dark:border-zinc-700 dark:bg-zinc-900">
+          <Heart className="mx-auto mb-5 h-14 w-14 text-zinc-200 dark:text-zinc-700" />
+          <h3 className="font-geist mb-2 text-lg font-bold tracking-[-0.01em] text-zinc-700 dark:text-zinc-300">
             Aucun favori pour le moment
           </h3>
-          <p className="mb-6 text-sm text-gray-400">
+          <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
             Sauvegardez des annonces depuis la recherche ou la page détail.
           </p>
-          <Link to="/annonces" className="btn-primary">
+          <Link
+            to="/search"
+            className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)] transition-colors hover:bg-blue-700"
+          >
+            <Search className="h-4 w-4" />
             Explorer les annonces
           </Link>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {favsAnnonces.map((annonce) => (
-            <FavoriteCard
+          {favsAnnonces.map((annonce, i) => (
+            <motion.div
               key={annonce.id}
-              annonce={annonce}
-              onRemove={(id) => toggleFavori(id).catch(() => {})}
-            />
+              initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.35,
+                ease: "easeOut",
+                delay: Math.min(i * 0.05, 0.3),
+              }}
+            >
+              <AnnonceCard annonce={annonce} />
+            </motion.div>
           ))}
         </div>
       )}

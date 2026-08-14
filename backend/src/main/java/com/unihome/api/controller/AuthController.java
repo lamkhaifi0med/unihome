@@ -6,6 +6,7 @@ import com.unihome.api.dto.RegisterRequestDTO;
 import com.unihome.api.dto.ResendConfirmationRequestDTO;
 import com.unihome.api.dto.ForgotPasswordRequestDTO;
 import com.unihome.api.dto.ResetPasswordRequestDTO;
+import com.unihome.api.dto.SuspensionAppealRequestDTO;
 import com.unihome.api.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,13 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto) {
         return ResponseEntity.ok(authService.login(dto));
+    }
+
+    /** Appel d'une suspension de compte (identite verifiee par mot de passe). */
+    @PostMapping("/appel-suspension")
+    public ResponseEntity<Void> appelSuspension(@Valid @RequestBody SuspensionAppealRequestDTO dto) {
+        authService.deposerAppelSuspension(dto);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping(value = "/confirm", produces = MediaType.TEXT_PLAIN_VALUE)

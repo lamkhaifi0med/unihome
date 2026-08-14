@@ -13,7 +13,8 @@ export const adminApi = {
   // Users
   getUsers: (search) =>
     api.get("/api/admin/users", { params: search ? { search } : {} }),
-  suspendreUser: (id) => api.post(`/api/admin/users/${id}/suspendre`),
+  suspendreUser: (id, raison) =>
+    api.post(`/api/admin/users/${id}/suspendre`, { raison }),
   reactiverUser: (id) => api.post(`/api/admin/users/${id}/reactiver`),
   validerCin: (id) => api.post(`/api/admin/users/${id}/valider-cin`),
   demanderNouveauCin: (id, raison) =>

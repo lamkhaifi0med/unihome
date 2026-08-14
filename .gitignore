@@ -36,3 +36,7 @@ frontend/public/demo-photos/
 
 # Local test seed data (app ships empty; schema lives in backend/unihome.sql)
 backend/sql/
+# Impeccable design tooling artifacts (local only)
+.impeccable/
+.github/skills/
+.github/agents/

@@ -4,6 +4,7 @@ import com.unihome.api.dto.AnnonceDetailDTO;
 import com.unihome.api.dto.AnnonceRequestDTO;
 import com.unihome.api.dto.AnnonceResponseDTO;
 import com.unihome.api.dto.AnnonceRechercheDTO;
+import com.unihome.api.dto.AnnonceUpdateRequestDTO;
 import com.unihome.api.dto.OwnerAnnonceDTO;
 import com.unihome.api.repository.UtilisateurRepository;
 import com.unihome.api.service.AnnonceService;
@@ -14,10 +15,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,6 +51,36 @@ public class AnnonceController {
     @GetMapping("/proprietaire/{proprietaireId}")
     public List<OwnerAnnonceDTO> getAnnoncesProprietaire(@PathVariable UUID proprietaireId) {
         return annonceService.getAnnoncesProprietaire(proprietaireId);
+    }
+
+    @PutMapping(value = "/{annonceId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    public AnnonceResponseDTO modifierAnnonce(
+            @PathVariable UUID annonceId,
+            @Valid @ModelAttribute AnnonceUpdateRequestDTO annonceUpdateRequestDTO) {
+        var annonce = annonceService.modifierAnnonce(annonceId, currentUserId(), annonceUpdateRequestDTO);
+        return annonceService.buildResponseDTO(annonce);
+    }
+
+    @PostMapping("/{annonceId}/archiver")
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    public AnnonceResponseDTO archiverAnnonce(@PathVariable UUID annonceId) {
+        var annonce = annonceService.archiverAnnonceProprietaire(annonceId, currentUserId());
+        return annonceService.buildResponseDTO(annonce);
+    }
+
+    @PostMapping("/{annonceId}/desarchiver")
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    public AnnonceResponseDTO desarchiverAnnonce(@PathVariable UUID annonceId) {
+        var annonce = annonceService.desarchiverAnnonce(annonceId, currentUserId());
+        return annonceService.buildResponseDTO(annonce);
+    }
+
+    @DeleteMapping("/{annonceId}")
+    @PreAuthorize("hasRole('PROPRIETAIRE')")
+    public ResponseEntity<Void> supprimerAnnonce(@PathVariable UUID annonceId) {
+        annonceService.supprimerAnnonce(annonceId, currentUserId());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{annonceId}")

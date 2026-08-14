@@ -12,4 +12,6 @@ public interface PhotoRepository extends JpaRepository<Photo, UUID> {
     long countByAnnonce_Id(UUID annonceId);
 
     List<Photo> findByAnnonce_IdOrderByOrdreAsc(UUID annonceId);
+
+    void deleteByAnnonce_Id(UUID annonceId);
 }

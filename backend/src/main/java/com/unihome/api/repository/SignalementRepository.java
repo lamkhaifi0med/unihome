@@ -24,5 +24,7 @@ public interface SignalementRepository extends JpaRepository<Signalement, UUID> 
 
     @Query(value = "SELECT * FROM signalements s WHERE s.statut = CAST(:#{#statut.name()} AS statut_signalement_enum) ORDER BY s.created_at DESC", nativeQuery = true)
     List<Signalement> findByStatutOrderByCreatedAtDesc(@Param("statut") StatutSignalementEnum statut);
+
+    void deleteByAnnonce_Id(UUID annonceId);
 }
 

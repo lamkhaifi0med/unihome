@@ -1491,6 +1491,116 @@ async def chatbot_chat(req: ChatRequest) -> ChatResponse:
         response = _fallback_chat_response(req)
     await _save_chat_turn(req.sessionId, req.message, response.reply)
     return response
+
+
+# ---------------------------------------------------------------------------
+# /parse-search — interprétation IA d'une requête de recherche libre
+# ---------------------------------------------------------------------------
+# Le frontend envoie la phrase + le catalogue réel (campus, villes, équipements).
+# Gemini mappe la phrase sur des filtres structurés ; toute valeur hors
+# catalogue est rejetée côté Python (pas d'hallucination possible).
+
+
+class ParseSearchUniversite(BaseModel):
+    id   : str
+    nom  : str
+    ville: str = ""
+
+
+class ParseSearchRequest(BaseModel):
+    query      : str = Field(..., min_length=1, max_length=300)
+    universites: list[ParseSearchUniversite] = Field(default_factory=list)
+    villes     : list[str] = Field(default_factory=list)
+    equipements: list[str] = Field(default_factory=list)
+    types      : list[str] = Field(default_factory=list)
+
+
+class ParseSearchResponse(BaseModel):
+    universiteId: Optional[str] = None
+    ville       : Optional[str] = None
+    budgetMax   : Optional[int] = None
+    surfaceMin  : Optional[int] = None
+    type        : Optional[str] = None
+    rayon       : Optional[int] = None
+    equipements : list[str] = Field(default_factory=list)
+
+
+PARSE_SEARCH_PROMPT = """Tu es l'interpréteur de recherche de UniHome (logement étudiant au Maroc).
+Convertis la requête utilisateur en filtres JSON stricts.
+
+RÈGLES ABSOLUES :
+1. Tu ne peux répondre QUE par un objet JSON, sans texte autour.
+2. "universiteId" doit être un id EXACT de la liste CAMPUS (tolère fautes de frappe
+   et variantes : "Marrakesh"→"Marrakech", "l'ENIAD"→"ENIAD"). Sinon null.
+3. "ville" doit être une valeur EXACTE de la liste VILLES, sinon null.
+4. "equipements" ne contient QUE des libellés EXACTS de la liste EQUIPEMENTS
+   (mappe les synonymes : "internet"→"Wifi" si présent, "machine à laver"→"Lave-linge"…).
+5. "type" doit appartenir à la liste TYPES, sinon null.
+6. "budgetMax" en dirhams (nombre entier) si un budget est exprimé, sinon null.
+7. "surfaceMin" en m² si exprimée, sinon null.
+8. "rayon" en mètres si une distance est exprimée ("à moins de 2 km" → 2000), sinon null.
+9. N'invente JAMAIS une valeur absente du catalogue.
+
+Format de sortie :
+{"universiteId": string|null, "ville": string|null, "budgetMax": int|null,
+ "surfaceMin": int|null, "type": string|null, "rayon": int|null, "equipements": [string]}
+"""
+
+
+@app.post("/parse-search", response_model=ParseSearchResponse, tags=["Search"])
+async def parse_search(req: ParseSearchRequest) -> ParseSearchResponse:
+    logger.info("► ParseSearch – query=%r | campus=%d", req.query, len(req.universites))
+
+    campus_lines = "\n".join(
+        f"- id={u.id} | {u.nom} ({u.ville})" for u in req.universites
+    )
+    prompt = (
+        f"{PARSE_SEARCH_PROMPT}\n\n"
+        f"CAMPUS :\n{campus_lines}\n\n"
+        f"VILLES : {', '.join(req.villes)}\n"
+        f"EQUIPEMENTS : {', '.join(req.equipements)}\n"
+        f"TYPES : {', '.join(req.types)}\n\n"
+        f"Requête utilisateur : {req.query!r}"
+    )
+
+    model = genai.GenerativeModel(
+        model_name=MODEL_NAME,
+        generation_config=GenerationConfig(
+            response_mime_type="application/json",
+            temperature=0.0,
+            max_output_tokens=512,
+        ),
+        safety_settings=SAFETY_SETTINGS,
+    )
+    response = await model.generate_content_async(prompt)
+    text = (response.text or "").strip()
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        raise HTTPException(status_code=502, detail="Réponse IA sans JSON")
+    data = json.loads(match.group(0))
+
+    # Validation anti-hallucination : chaque valeur doit exister dans le catalogue.
+    valid_ids = {u.id for u in req.universites}
+    out = ParseSearchResponse()
+    if str(data.get("universiteId") or "") in valid_ids:
+        out.universiteId = str(data["universiteId"])
+        out.ville = next(
+            (u.ville for u in req.universites if u.id == out.universiteId), None
+        )
+    elif data.get("ville") in req.villes:
+        out.ville = data["ville"]
+    if isinstance(data.get("budgetMax"), (int, float)) and data["budgetMax"] > 0:
+        out.budgetMax = int(data["budgetMax"])
+    if isinstance(data.get("surfaceMin"), (int, float)) and data["surfaceMin"] > 0:
+        out.surfaceMin = int(data["surfaceMin"])
+    if data.get("type") in req.types:
+        out.type = data["type"]
+    if isinstance(data.get("rayon"), (int, float)) and 100 <= data["rayon"] <= 50000:
+        out.rayon = int(data["rayon"])
+    out.equipements = [e for e in (data.get("equipements") or []) if e in req.equipements]
+
+    logger.info("◄ ParseSearch – %s", out.model_dump(exclude_none=True))
+    return out
  
  
 @app.post(

@@ -6,4 +6,6 @@ export const searchApi = {
     api.get("/api/annonces/recherche/campus", {
       params: { universiteId, rayon, page, size },
     }),
+  interpret: (query) =>
+    api.post("/api/annonces/recherche/interpret", { query }),
 };

@@ -50,7 +50,7 @@ public class PhotoService {
             photo.setUrl(url);
             // TODO: Integrate pHash calculation
             photo.setPhash(null);
-            photo.setEstPrincipale(Boolean.FALSE);
+            photo.setEstPrincipale(existingCount == 0);
             photo.setOrdre((short) (existingCount + 1));
 
             return photoRepository.save(photo);

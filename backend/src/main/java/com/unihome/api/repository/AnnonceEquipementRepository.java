@@ -20,5 +20,7 @@ public interface AnnonceEquipementRepository extends JpaRepository<AnnonceEquipe
      * Find all annonces that have a specific equipement
      */
     List<AnnonceEquipement> findByIdEquipementId(Integer equipementId);
+
+    void deleteByIdAnnonceId(UUID annonceId);
 }
 

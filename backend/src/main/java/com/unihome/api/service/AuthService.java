@@ -6,11 +6,13 @@ import com.unihome.api.dto.RegisterRequestDTO;
 import com.unihome.api.dto.ResendConfirmationRequestDTO;
 import com.unihome.api.dto.ForgotPasswordRequestDTO;
 import com.unihome.api.dto.ResetPasswordRequestDTO;
+import com.unihome.api.dto.SuspensionAppealRequestDTO;
 import com.unihome.api.entity.Admin;
 import com.unihome.api.entity.ConfirmationToken;
 import com.unihome.api.entity.Etudiant;
 import com.unihome.api.entity.Proprietaire;
 import com.unihome.api.entity.Utilisateur;
+import com.unihome.api.exception.AccountSuspendedException;
 import com.unihome.api.repository.ConfirmationTokenRepository;
 import com.unihome.api.repository.ProprietaireRepository;
 import com.unihome.api.repository.UtilisateurRepository;
@@ -19,6 +21,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -125,15 +129,27 @@ public class AuthService {
     }
 
     public AuthResponseDTO login(LoginRequestDTO dto) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getMotDePasse()));
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getMotDePasse()));
+        } catch (DisabledException exception) {
+            // Compte suspendu (enabled=false). On ne revele la suspension que si
+            // le mot de passe est correct, sinon 401 classique.
+            Utilisateur suspendu = utilisateurRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+            if (!passwordEncoder.matches(dto.getMotDePasse(), suspendu.getMotDePasse())) {
+                throw new BadCredentialsException("Invalid credentials");
+            }
+            throw new AccountSuspendedException(suspendu.getRaisonSuspension());
+        }
         if (!authentication.isAuthenticated()) {
             throw new EntityNotFoundException("Invalid credentials");
         }
         Utilisateur utilisateur = utilisateurRepository.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur not found"));
         if (Boolean.FALSE.equals(utilisateur.getIsActive())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Compte suspendu");
+            throw new AccountSuspendedException(utilisateur.getRaisonSuspension());
         }
         if (Boolean.FALSE.equals(utilisateur.getEmailConfirme())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Email non confirme");
@@ -141,6 +157,25 @@ public class AuthService {
         UserDetails userDetails = userDetailsService.loadUserByUsername(dto.getEmail());
         String jwt = jwtUtils.generateToken(userDetails);
         return new AuthResponseDTO(jwt, null);
+    }
+
+    /**
+     * Appel d'un utilisateur suspendu. Identite verifiee par email + mot de
+     * passe (pas de JWT possible : le compte ne peut pas se connecter).
+     * Un seul appel actif a la fois : un nouvel appel remplace l'ancien.
+     */
+    public void deposerAppelSuspension(SuspensionAppealRequestDTO dto) {
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Identifiants incorrects"));
+        if (!passwordEncoder.matches(dto.getMotDePasse(), utilisateur.getMotDePasse())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Identifiants incorrects");
+        }
+        if (!Boolean.FALSE.equals(utilisateur.getIsActive())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ce compte n'est pas suspendu.");
+        }
+        utilisateur.setAppelMessage(dto.getMessage().trim());
+        utilisateur.setAppelDate(LocalDateTime.now());
+        utilisateurRepository.save(utilisateur);
     }
 
     public String confirmEmail(String token) {

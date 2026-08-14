@@ -10,5 +10,7 @@ import java.util.UUID;
 @Repository
 public interface ContactAnnonceRepository extends JpaRepository<ContactAnnonce, UUID> {
     List<ContactAnnonce> findByAnnonce_Id(UUID annonceId);
+
+    void deleteByAnnonce_Id(UUID annonceId);
 }
 

@@ -33,6 +33,7 @@ export default function Chatbot() {
   const ownerAnnonceRent = searchParams.get("ownerAnnonceRent");
   const ownerAnnoncePhoto = searchParams.get("ownerAnnoncePhoto");
   const intentHint = searchParams.get("intent");
+  const initialPrompt = searchParams.get("q");
 
   useEffect(() => {
     if (!ownerAnnonceId || !user?.id || user?.role !== "PROPRIETAIRE") {
@@ -99,28 +100,31 @@ export default function Chatbot() {
     : null;
 
   return (
-    <div className="page-container py-8 max-w-3xl">
+    <div className="page-container max-w-3xl py-8">
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-accent-600 flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <span className="absolute inset-0 rounded-full bg-blue-500 opacity-25 blur-lg" />
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_12px_32px_-8px_rgba(37,99,235,0.6)] dark:bg-blue-500">
+              <Sparkles className="h-6 w-6" />
+            </div>
           </div>
           <div>
-            <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white">
+            <h1 className="font-geist text-2xl font-bold tracking-[-0.02em] text-zinc-950 dark:text-white">
               Assistant UniHome
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Propulsé par Gemini · Disponible 24h/24
+            <p className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">
+              propulsé par gemini · 24h/24 · fr · عربية · darija
             </p>
             {currentAnnonceId && (
-              <p className="mt-1 text-xs font-semibold text-primary-600 dark:text-primary-300">
-                Contexte annonce actif · UniBot peut répondre sur cette annonce.
+              <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/30">
+                Contexte annonce actif · UniBot peut répondre sur cette annonce
               </p>
             )}
             {intentHint === "owner-dashboard" && (
-              <p className="mt-1 text-xs font-semibold text-primary-600 dark:text-primary-300">
-                Mode propriétaire actif · UniBot peut aider sur{" "}
-                {ownerAnnonceId ? "cette annonce" : "vos annonces"}.
+              <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/30">
+                Mode propriétaire actif · aide sur{" "}
+                {ownerAnnonceId ? "cette annonce" : "vos annonces"}
               </p>
             )}
           </div>
@@ -128,9 +132,9 @@ export default function Chatbot() {
       </div>
 
       {ownerAnnonceContext && (
-        <div className="mb-5 overflow-hidden rounded-[34px] border border-primary-200 bg-white shadow-2xl shadow-primary-950/10 dark:border-primary-500/20 dark:bg-slate-950/80">
+        <div className="mb-5 overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-[0_24px_60px_-30px_rgba(9,9,11,0.25)] dark:border-zinc-800 dark:bg-zinc-900">
           <div className="grid gap-0 sm:grid-cols-[240px_1fr]">
-            <div className="relative min-h-[190px] overflow-hidden bg-gradient-to-br from-slate-200 via-primary-100 to-accent-100 dark:from-slate-800 dark:via-primary-950/60 dark:to-accent-950/60">
+            <div className="relative min-h-[190px] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
               {ownerAnnonceContext.photo ? (
                 <img
                   src={ownerAnnonceContext.photo}
@@ -138,87 +142,87 @@ export default function Chatbot() {
                   className="h-full min-h-[190px] w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full min-h-[190px] w-full flex-col items-center justify-center gap-3 text-primary-500 dark:text-primary-200">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/70 shadow-lg dark:bg-white/10">
+                <div className="flex h-full min-h-[190px] w-full flex-col items-center justify-center gap-3 text-zinc-400 dark:text-zinc-500">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm dark:bg-zinc-900">
                     {ownerAnnonceLoading ? (
-                      <Sparkles className="h-8 w-8 animate-pulse" />
+                      <Sparkles className="h-8 w-8 animate-pulse text-blue-500" />
                     ) : (
                       <ImageIcon className="h-8 w-8" />
                     )}
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-wide">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em]">
                     {ownerAnnonceLoading
-                      ? "Chargement de l'annonce"
-                      : "Photo non disponible"}
+                      ? "chargement de l'annonce"
+                      : "photo non disponible"}
                   </span>
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
               <div className="absolute bottom-3 left-3 right-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-primary-700 shadow-lg dark:bg-slate-950/90 dark:text-primary-200">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-blue-700 shadow-lg dark:bg-zinc-950/90 dark:text-blue-300">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Annonce ciblée par UniBot
+                  annonce ciblée
                 </span>
               </div>
               {formattedOwnerRent && (
-                <div className="absolute right-3 top-3 rounded-2xl bg-white/95 px-3 py-2 text-sm font-black text-slate-950 shadow-lg dark:bg-slate-950/90 dark:text-white">
+                <div className="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1.5 font-mono text-sm font-bold tabular-nums text-zinc-950 shadow-lg dark:bg-zinc-950/90 dark:text-white">
                   {formattedOwnerRent}
                 </div>
               )}
             </div>
 
-            <div className="min-w-0 bg-gradient-to-br from-primary-50 via-white to-accent-50 p-6 dark:from-primary-500/10 dark:via-white/5 dark:to-accent-500/10">
+            <div className="min-w-0 p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-primary-600 dark:text-primary-300">
-                    UniBot répond sur cette annonce
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-400">
+                    unibot répond sur cette annonce
                   </p>
-                  <h2 className="mt-1 line-clamp-2 font-display text-2xl font-bold leading-snug text-gray-950 dark:text-white">
+                  <h2 className="mt-1 line-clamp-2 font-geist text-xl font-bold leading-snug tracking-[-0.01em] text-zinc-950 dark:text-white">
                     {ownerAnnonceLabel}
                   </h2>
                 </div>
-                <div className="hidden h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white text-primary-600 shadow-sm dark:bg-white/10 dark:text-primary-200 sm:flex">
+                <div className="hidden h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 sm:flex">
                   <Home className="h-5 w-5" />
                 </div>
               </div>
 
-              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-gray-600 dark:text-gray-300">
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                 {ownerAnnonceContext.status && (
-                  <span className="rounded-full bg-amber-100 px-3 py-1.5 text-amber-800 shadow-sm dark:bg-amber-500/15 dark:text-amber-200">
+                  <span className="rounded-full bg-amber-50 px-3 py-1.5 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30">
                     {ownerStatusLabels[ownerAnnonceContext.status] ||
                       ownerAnnonceContext.status}
                   </span>
                 )}
                 {ownerAnnonceContext.city && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-3 py-1.5 shadow-sm dark:bg-white/10">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1.5 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                     <MapPin className="h-3.5 w-3.5" />
                     {ownerAnnonceContext.city}
                   </span>
                 )}
                 {ownerAnnonceContext.type && (
-                  <span className="rounded-full bg-white/85 px-3 py-1.5 shadow-sm dark:bg-white/10">
+                  <span className="rounded-full bg-zinc-100 px-3 py-1.5 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                     {ownerAnnonceContext.type}
                   </span>
                 )}
                 {ownerAnnonceContext.surface && (
-                  <span className="rounded-full bg-white/85 px-3 py-1.5 shadow-sm dark:bg-white/10">
+                  <span className="rounded-full bg-zinc-100 px-3 py-1.5 font-mono tabular-nums text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                     {ownerAnnonceContext.surface} m²
                   </span>
                 )}
                 {ownerAnnonceContext.score !== null && (
-                  <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-emerald-800 shadow-sm dark:bg-emerald-500/15 dark:text-emerald-200">
-                    Score {ownerAnnonceContext.score}/100
+                  <span className="rounded-full bg-emerald-50 px-3 py-1.5 font-mono tabular-nums text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30">
+                    score {ownerAnnonceContext.score}/100
                   </span>
                 )}
                 {!ownerAnnonceContext.photo && formattedOwnerRent && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-3 py-1.5 shadow-sm dark:bg-white/10">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1.5 font-mono tabular-nums text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                     <WalletCards className="h-3.5 w-3.5" />
                     {formattedOwnerRent}
                   </span>
                 )}
               </div>
 
-              <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
+              <p className="mt-3 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
                 UniBot répondra en priorité sur cette annonce : statut, score de
                 confiance, informations manquantes et améliorations possibles.
               </p>
@@ -232,6 +236,7 @@ export default function Chatbot() {
         ownerAnnonceId={ownerAnnonceId}
         intentHint={intentHint}
         initialContextMessage={ownerContextMessage}
+        initialPrompt={initialPrompt}
       />
     </div>
   );

@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -24,6 +25,7 @@ public class OwnerAnnonceDTO {
     private Boolean chargesIncluses;
     private StatutAnnonceEnum statut;
     private Short scoreConfiance;
+    private Map<String, Integer> detailScore;
     private String raisonStatut;
     private Integer nbSignalements;
     private LocalDateTime datePublication;
@@ -42,6 +44,7 @@ public class OwnerAnnonceDTO {
     private List<Integer> equipementIds;
     private List<String> equipements;
     private long favoris;
+    private long nbVues;
 
     @Data
     @NoArgsConstructor

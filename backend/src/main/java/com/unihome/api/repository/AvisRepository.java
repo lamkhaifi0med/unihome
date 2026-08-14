@@ -16,4 +16,6 @@ public interface AvisRepository extends JpaRepository<Avis, UUID> {
      * annonce detail page to display the review list.
      */
     List<Avis> findByAnnonce_IdOrderByCreatedAtDesc(UUID annonceId);
+
+    void deleteByAnnonce_Id(UUID annonceId);
 }

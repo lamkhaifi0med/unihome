@@ -46,7 +46,7 @@ public class UserController {
         long nbConsultations = 0;
         if (utilisateur instanceof Etudiant etudiant) {
             nbFavoris = favoriRepository.countByIdEtudiantId(etudiant.getId());
-            nbConsultations = consultationRepository.countByEtudiantId(etudiant.getId());
+            nbConsultations = consultationRepository.countDistinctAnnoncesByEtudiantId(etudiant.getId());
         }
         return ResponseEntity.ok(Map.of("nbFavoris", nbFavoris, "nbConsultations", nbConsultations));
     }

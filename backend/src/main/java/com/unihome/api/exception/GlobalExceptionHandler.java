@@ -9,6 +9,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -21,6 +22,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException exception) {
         HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
         return buildResponse(status, exception.getReason());
+    }
+
+    @ExceptionHandler(AccountSuspendedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccountSuspended(AccountSuspendedException exception) {
+        // Payload structure pour l'ecran de ban cote frontend : code stable
+        // + motif de suspension optionnel.
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "timestamp", Instant.now().toString(),
+                "status", HttpStatus.FORBIDDEN.value(),
+                "error", HttpStatus.FORBIDDEN.getReasonPhrase(),
+                "code", "ACCOUNT_SUSPENDED",
+                "message", "Compte suspendu",
+                "raison", exception.getRaison() == null ? "" : exception.getRaison()
+        ));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -63,6 +78,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException exception) {
         return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleMaxUploadSize() {
+        return buildResponse(HttpStatus.PAYLOAD_TOO_LARGE,
+                "Fichier trop volumineux : maximum 10 MB par fichier (60 MB au total).");
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException exception) {
+        // Cloudinary upload failures throw IllegalStateException; without this
+        // handler the frontend only sees an anonymous 500.
+        return buildResponse(HttpStatus.BAD_GATEWAY,
+                "L'envoi des fichiers a échoué. Vérifiez votre connexion et réessayez.");
     }
 
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {

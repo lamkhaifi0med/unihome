@@ -23,5 +23,7 @@ public interface FavoriRepository extends JpaRepository<Favori, FavoriId> {
 
     long countByIdAnnonceId(UUID annonceId);
     long countByIdEtudiantId(UUID etudiantId);
+
+    void deleteByIdAnnonceId(UUID annonceId);
 }
 

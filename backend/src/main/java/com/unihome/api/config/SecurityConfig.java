@@ -13,8 +13,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.config.http.SessionCreationPolicy;import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -56,11 +55,17 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // Sans authentification valide (token absent/expire/invalide) -> 401,
+            // pas 403 : le frontend declenche la deconnexion automatique sur 401.
+            .exceptionHandling(handling -> handling
+                .authenticationEntryPoint((request, response, authException) ->
+                    response.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED, "Non authentifié")))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/internal/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/chatbot").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/annonces/recherche/interpret").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/annonces/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/avis/annonce/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/universites").permitAll()

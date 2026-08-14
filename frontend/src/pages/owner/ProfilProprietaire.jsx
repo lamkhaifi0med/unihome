@@ -37,6 +37,11 @@ const emptyForm = {
   nbAvisTotal: 0,
 };
 
+const inputClass =
+  "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white dark:placeholder-zinc-500 dark:focus:border-blue-500";
+const labelClass =
+  "block font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400 mb-1.5";
+
 export default function ProfilProprietaire({ isDark, onToggleTheme }) {
   const { user, updateUser } = useAuth();
   const [form, setForm] = useState(emptyForm);
@@ -191,48 +196,51 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
       onToggleTheme={onToggleTheme}
     >
       <div className="mb-8">
-        <h1 className="font-display font-bold text-2xl text-gray-900 dark:text-white">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-blue-600 dark:text-blue-400">
+          compte · propriétaire
+        </p>
+        <h1 className="mt-1 font-geist font-bold text-2xl tracking-[-0.02em] text-zinc-950 dark:text-white">
           Mon profil
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+        <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
           Complétez vos informations pour renforcer la confiance autour de vos
           annonces.
         </p>
       </div>
 
       <div className="grid xl:grid-cols-[320px_minmax(0,1fr)] gap-6">
-        <aside className="glass-light rounded-2xl p-6 h-fit">
+        <aside className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 h-fit">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-purple-500/20">
+            <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold shadow-[0_12px_32px_-8px_rgba(37,99,235,0.6)]">
               {(form.prenom || form.nom || user?.nom || "P")[0]?.toUpperCase()}
             </div>
             <div className="min-w-0">
-              <h2 className="font-display font-bold text-gray-900 dark:text-white truncate">
+              <h2 className="font-geist font-bold tracking-[-0.01em] text-zinc-950 dark:text-white truncate">
                 {[form.prenom, form.nom].filter(Boolean).join(" ") ||
                   "Propriétaire"}
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+              <p className="font-mono text-xs text-zinc-500 dark:text-zinc-400 truncate">
                 {form.email}
               </p>
             </div>
           </div>
 
-          <div className="mt-6 rounded-2xl bg-white/70 dark:bg-white/5 border border-gray-100 dark:border-white/10 p-4">
+          <div className="mt-6 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                Profil complété
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">
+                profil complété
               </span>
-              <span className="text-sm font-bold text-primary-600 dark:text-primary-300">
+              <span className="font-mono text-sm font-bold tabular-nums text-blue-600 dark:text-blue-400">
                 {completion}%
               </span>
             </div>
-            <div className="h-2 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
+            <div className="h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all"
+                className="h-full rounded-full bg-blue-600 transition-all dark:bg-blue-500"
                 style={{ width: `${completion}%` }}
               />
             </div>
-            <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+            <p className="mt-3 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
               Nom, téléphone et CIN rendent le profil exploitable pour la
               validation et le support.
             </p>
@@ -259,20 +267,20 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
           </div>
         </aside>
 
-        <section className="glass-light rounded-2xl p-6">
+        <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           {loading ? (
-            <div className="h-72 flex items-center justify-center text-gray-500 dark:text-gray-400">
+            <div className="h-72 flex items-center justify-center font-mono text-sm text-zinc-500 dark:text-zinc-400">
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              Chargement du profil...
+              chargement du profil…
             </div>
           ) : (
             <form onSubmit={handleSave} className="space-y-6">
-              <div className="flex items-start justify-between gap-4 pb-5 border-b border-gray-100 dark:border-white/10">
+              <div className="flex items-start justify-between gap-4 pb-5 border-b border-zinc-100 dark:border-zinc-800">
                 <div>
-                  <h3 className="font-display font-semibold text-lg text-gray-900 dark:text-white">
+                  <h3 className="font-geist font-semibold text-lg tracking-[-0.01em] text-zinc-950 dark:text-white">
                     Informations propriétaire
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
                     Les informations sensibles restent verrouillées après
                     inscription.
                   </p>
@@ -280,7 +288,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="btn-primary flex items-center gap-2 shrink-0 disabled:opacity-60"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)] transition hover:bg-blue-700 disabled:opacity-60"
                 >
                   {saving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -310,85 +318,79 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Prénom
-                  </label>
+                  <label className={labelClass}>Prénom</label>
                   <input
                     type="text"
                     value={form.prenom}
                     onChange={set("prenom")}
-                    className="input-field"
+                    className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Nom
-                  </label>
+                  <label className={labelClass}>Nom</label>
                   <input
                     type="text"
                     value={form.nom}
                     onChange={set("nom")}
-                    className="input-field"
+                    className={inputClass}
                   />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Adresse e-mail
-                  </label>
+                  <label className={labelClass}>Adresse e-mail</label>
                   <input
                     type="email"
                     value={form.email}
                     disabled
-                    className="input-field opacity-70 cursor-not-allowed"
+                    className={`${inputClass} opacity-70 cursor-not-allowed`}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
-                    Téléphone
-                  </label>
+                  <label className={labelClass}>Téléphone</label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     <input
                       type="tel"
                       value={form.telephone}
                       onChange={set("telephone")}
                       placeholder="+212 6..."
-                      className="input-field pl-10"
+                      className={`${inputClass} pl-10`}
                     />
                   </div>
                 </div>
               </div>
 
               <div className="grid md:grid-cols-3 gap-4">
-                <div className="rounded-2xl border border-gray-100 dark:border-white/10 bg-white/70 dark:bg-white/5 p-4">
-                  <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-medium mb-2">
+                <div className="rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/60 p-4">
+                  <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400 mb-2">
                     <FileCheck2 className="w-4 h-4" />
-                    Numéro CIN
+                    numéro cin
                   </div>
-                  <p className="font-semibold text-gray-900 dark:text-white">
+                  <p className="font-mono font-semibold tabular-nums text-zinc-950 dark:text-white">
                     {form.numeroCin || "Non renseigné"}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-gray-100 dark:border-white/10 bg-white/70 dark:bg-white/5 p-4">
-                  <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-medium mb-2">
+                <div className="rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/60 p-4">
+                  <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400 mb-2">
                     <Shield className="w-4 h-4" />
-                    Statut CIN
+                    statut cin
                   </div>
-                  <p className="font-semibold text-gray-900 dark:text-white">
+                  <p
+                    className={`font-semibold ${form.estVerifieCin ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}
+                  >
                     {form.estVerifieCin ? "Validée" : "En attente"}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-gray-100 dark:border-white/10 bg-white/70 dark:bg-white/5 p-4">
-                  <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs font-medium mb-2">
+                <div className="rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/60 p-4">
+                  <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400 mb-2">
                     <Star className="w-4 h-4" />
-                    Réputation
+                    réputation
                   </div>
-                  <p className="font-semibold text-gray-900 dark:text-white">
+                  <p className="font-mono font-semibold tabular-nums text-zinc-950 dark:text-white">
                     {form.noteMoyenne ?? "-"} / 5
-                    <span className="ml-2 text-xs font-normal text-gray-400">
+                    <span className="ml-2 text-xs font-normal text-zinc-400">
                       ({form.nbAvisTotal} avis)
                     </span>
                   </p>
@@ -398,14 +400,14 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
               <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-5 dark:border-amber-500/20 dark:bg-amber-500/10">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-amber-600 shadow-sm dark:bg-white/10 dark:text-amber-300">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-amber-600 shadow-sm dark:bg-zinc-900 dark:text-amber-300">
                       <UploadCloud className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="font-display font-semibold text-gray-900 dark:text-white">
+                      <h4 className="font-geist font-semibold tracking-[-0.01em] text-zinc-950 dark:text-white">
                         Nouvelle photo CIN
                       </h4>
-                      <p className="mt-1 max-w-2xl text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+                      <p className="mt-1 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
                         Si l'admin vous demande une photo plus claire,
                         choisissez une image nette, complète et sans reflet.
                         L'envoi remettra automatiquement votre CIN en attente de
@@ -416,7 +418,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
                           href={form.photoCinUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-2 inline-flex text-xs font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-300"
+                          className="mt-2 inline-flex text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400"
                         >
                           Voir la photo CIN actuelle
                         </a>
@@ -425,13 +427,13 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
                   </div>
 
                   <div className="w-full space-y-3 lg:w-80">
-                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-amber-300 bg-white/80 px-4 py-4 text-center transition hover:bg-white dark:border-amber-500/40 dark:bg-white/5 dark:hover:bg-white/10">
+                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-amber-300 bg-white/80 px-4 py-4 text-center transition hover:bg-white dark:border-amber-500/40 dark:bg-zinc-900/60 dark:hover:bg-zinc-900">
                       <UploadCloud className="mb-2 h-5 w-5 text-amber-600 dark:text-amber-300" />
-                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                      <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
                         {cinFile ? cinFile.name : "Choisir une photo"}
                       </span>
-                      <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        PNG, JPG ou JPEG
+                      <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-zinc-500 dark:text-zinc-400">
+                        png · jpg · jpeg
                       </span>
                       <input
                         type="file"
@@ -447,7 +449,7 @@ export default function ProfilProprietaire({ isDark, onToggleTheme }) {
                       type="button"
                       onClick={handleCinUpload}
                       disabled={uploadingCin || !cinFile}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex w-full items-center justify-center gap-2 rounded-full bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {uploadingCin ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

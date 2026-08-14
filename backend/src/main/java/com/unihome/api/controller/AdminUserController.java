@@ -47,10 +47,16 @@ public class AdminUserController {
 
     @PostMapping("/{id}/suspendre")
     @Transactional
-    public ResponseEntity<Void> suspendre(@PathVariable UUID id) {
+    public ResponseEntity<Void> suspendre(@PathVariable UUID id,
+                                          @RequestBody(required = false) AdminDecisionRequestDTO body) {
         Utilisateur user = utilisateurRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable"));
+        String raison = body != null && body.getRaison() != null && !body.getRaison().isBlank()
+                ? body.getRaison().trim() : null;
         user.setIsActive(false);
+        user.setRaisonSuspension(raison);
+        user.setAppelMessage(null);
+        user.setAppelDate(null);
         utilisateurRepository.save(user);
 
         // Suspend all their active annonces if they're a proprietaire (Bible §16.4)
@@ -68,7 +74,7 @@ public class AdminUserController {
 
         try {
             emailService.sendAccountSuspensionEmail(
-                    user.getEmail(), user.getPrenom() + " " + user.getNom());
+                    user.getEmail(), user.getPrenom() + " " + user.getNom(), raison);
         } catch (Exception ignored) {}
 
         return ResponseEntity.ok().build();
@@ -80,8 +86,17 @@ public class AdminUserController {
         Utilisateur user = utilisateurRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Utilisateur introuvable"));
         user.setIsActive(true);
+        user.setRaisonSuspension(null);
+        user.setAppelMessage(null);
+        user.setAppelDate(null);
         utilisateurRepository.save(user);
         // Per Bible §16.4: listings are NOT auto-reactivated — admin must do it manually
+
+        try {
+            emailService.sendAccountReactivationEmail(
+                    user.getEmail(), user.getPrenom() + " " + user.getNom());
+        } catch (Exception ignored) {}
+
         return ResponseEntity.ok().build();
     }
 
@@ -132,6 +147,9 @@ public class AdminUserController {
         dto.setIsActive(u.getIsActive());
         dto.setEmailConfirme(u.getEmailConfirme());
         dto.setCreatedAt(u.getCreatedAt());
+        dto.setRaisonSuspension(u.getRaisonSuspension());
+        dto.setAppelMessage(u.getAppelMessage());
+        dto.setAppelDate(u.getAppelDate());
         if (u instanceof Proprietaire p) {
             dto.setEstVerifieCin(p.getEstVerifieCin());
             dto.setNumeroCin(p.getNumeroCin());

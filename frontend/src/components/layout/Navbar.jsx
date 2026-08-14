@@ -32,22 +32,22 @@ export default function Navbar({ isDark, onToggleTheme }) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/50 bg-white/75 shadow-sm shadow-indigo-500/5 backdrop-blur-2xl dark:border-white/10 dark:bg-dark-900/70">
+    <header className="sticky top-0 z-50 border-b border-zinc-200/80 bg-[#fafafa]/85 font-geist backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/85">
       <div className="page-container">
-        <div className="flex h-[4.5rem] items-center justify-between py-3">
+        <div className="flex h-16 items-center justify-between py-3">
           <Logo />
 
           {/* Desktop nav */}
-          <nav className="hidden items-center gap-1 rounded-2xl border border-gray-200/70 bg-white/70 p-1 shadow-inner shadow-indigo-500/5 backdrop-blur-xl md:flex dark:border-white/10 dark:bg-white/[0.04]">
+          <nav className="hidden items-center gap-1 md:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 font-body
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200
                   ${
                     isActive(link.to)
-                      ? "bg-gradient-to-r from-primary-600 to-accent-600 text-white shadow-lg shadow-primary-500/25"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-950 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white"
+                      ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-800 dark:text-zinc-50"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800/70 dark:hover:text-zinc-100"
                   }`}
               >
                 <link.icon className="h-4 w-4" />
@@ -69,34 +69,34 @@ export default function Navbar({ isDark, onToggleTheme }) {
                         ? "/dashboard-proprietaire"
                         : "/admin"
                   }
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                  className="flex items-center gap-2 rounded-full px-3 py-1.5 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-accent-600 flex items-center justify-center text-white text-sm font-bold">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
                     {user.nom[0]}
                   </div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
                     {user.nom.split(" ")[0]}
                   </span>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-all"
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-1.5">
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-gray-950 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white"
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800/70 dark:hover:text-zinc-100"
                 >
                   <UserRound className="h-4 w-4" />
                   Se connecter
                 </Link>
                 <Link
                   to="/register"
-                  className="rounded-xl bg-gradient-to-r from-primary-600 to-accent-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 transition hover:-translate-y-0.5 hover:shadow-primary-500/35"
+                  className="rounded-full bg-blue-600 px-[18px] py-2 text-sm font-semibold text-white shadow-[0_6px_16px_-6px_rgba(37,99,235,0.55)] transition hover:bg-blue-700"
                 >
                   S'inscrire
                 </Link>
@@ -105,7 +105,7 @@ export default function Navbar({ isDark, onToggleTheme }) {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors"
+              className="md:hidden flex h-9 w-9 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
             >
               {mobileOpen ? (
                 <X className="w-5 h-5" />
@@ -119,20 +119,20 @@ export default function Navbar({ isDark, onToggleTheme }) {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white/95 backdrop-blur-xl dark:border-white/10 dark:bg-dark-800/95">
+        <div className="md:hidden border-t border-zinc-200 bg-[#fafafa]/95 backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-950/95">
           <div className="page-container py-4 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-white/10"
+                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
               >
-                <link.icon className="h-4 w-4 text-primary-500" />
+                <link.icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 {link.label}
               </Link>
             ))}
-            <div className="border-t border-gray-200 dark:border-white/10 mt-2 pt-2 flex flex-col gap-1">
+            <div className="border-t border-zinc-200 dark:border-zinc-800 mt-2 pt-2 flex flex-col gap-1">
               {user ? (
                 <>
                   <Link
@@ -142,7 +142,7 @@ export default function Navbar({ isDark, onToggleTheme }) {
                         : "/dashboard-proprietaire"
                     }
                     onClick={() => setMobileOpen(false)}
-                    className="px-4 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10"
+                    className="px-4 py-3 rounded-xl text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     Mon tableau de bord
                   </Link>
@@ -158,14 +158,14 @@ export default function Navbar({ isDark, onToggleTheme }) {
                   <Link
                     to="/login"
                     onClick={() => setMobileOpen(false)}
-                    className="px-4 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10"
+                    className="px-4 py-3 rounded-xl text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
                     Se connecter
                   </Link>
                   <Link
                     to="/register"
                     onClick={() => setMobileOpen(false)}
-                    className="btn-primary text-sm text-center mx-0"
+                    className="rounded-full bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
                   >
                     S'inscrire gratuitement
                   </Link>

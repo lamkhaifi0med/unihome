@@ -19,4 +19,6 @@ export const authApi = {
   forgotPassword: (email) => api.post("/api/auth/forgot-password", { email }),
   resetPassword: (token, motDePasse) =>
     api.post("/api/auth/reset-password", { token, newPassword: motDePasse }),
+  appealSuspension: (email, motDePasse, message) =>
+    api.post("/api/auth/appel-suspension", { email, motDePasse, message }),
 };

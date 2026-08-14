@@ -9,10 +9,14 @@ import {
   Upload,
   Check,
   Shield,
+  Home,
 } from "lucide-react";
 import { authApi } from "../../api/authApi";
 import { useAuth } from "../../hooks/useAuth";
-import signupIllustration from "../../assets/auth/signup-amico.svg";
+import { JoinUs, SceneStyles } from "./homeScenes";
+
+const FIELD =
+  "w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-[15px] text-zinc-900 placeholder-zinc-400 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500";
 
 const ROLE_ETUDIANT = "ETUDIANT";
 const ROLE_PROPRIETAIRE = "PROPRIETAIRE";
@@ -158,34 +162,48 @@ export default function Register() {
       await authApi.resendConfirmation(successEmail);
       setResendStatus("E-mail de confirmation renvoyé.");
     } catch (error) {
-      setResendStatus("Impossible de renvoyer l'e-mail. Veuillez réessayer plus tard.");
+      setResendStatus(
+        "Impossible de renvoyer l'e-mail. Veuillez réessayer plus tard.",
+      );
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#1c1242] px-4 py-8 text-white sm:px-6 lg:px-10">
-      <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-7xl items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-        <section className="flex items-center justify-center">
-          <img
-            src={signupIllustration}
-            alt="Création d'un compte UniHome"
-            className="w-full max-w-[520px]"
-          />
+    <div className="relative min-h-screen overflow-hidden bg-[#fafafa] px-4 py-8 font-geist text-zinc-950 sm:px-6 lg:px-10 dark:bg-zinc-950 dark:text-zinc-50">
+      <SceneStyles />
+      <div className="uh-dotgrid pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,black,transparent)]" />
+      <div className="pointer-events-none absolute left-1/2 top-[-10rem] h-[22rem] w-[38rem] -translate-x-1/2 rounded-full bg-blue-600/10 blur-3xl dark:bg-blue-500/10" />
+
+      <Link
+        to="/"
+        className="relative inline-flex items-center gap-2 text-sm font-medium text-zinc-500 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+      >
+        <Home className="h-4 w-4" />
+        UniHome
+      </Link>
+
+      <div className="relative mx-auto grid min-h-[calc(100vh-6rem)] w-full max-w-7xl items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+        <section className="hidden flex-col items-center justify-center lg:flex">
+          <JoinUs className="w-full max-w-[460px]" />
+          <p className="mt-6 max-w-sm text-center text-[15px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+            Étudiant ou propriétaire, ton compte est prêt en deux minutes — et
+            chaque profil passe par la même vérification.
+          </p>
         </section>
 
         <section className="flex items-center justify-center">
-          <div className="w-full max-w-3xl rounded-[2rem] border border-white/40 bg-white/10 p-5 backdrop-blur-md sm:p-8">
+          <div className="w-full max-w-3xl rounded-2xl border border-zinc-200 bg-white p-5 shadow-[0_24px_60px_-30px_rgba(9,9,11,0.15)] sm:p-8 dark:border-zinc-800 dark:bg-zinc-900">
             {successEmail ? (
               <div className="text-center">
-                <div className="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto mb-6">
-                  <Check className="w-10 h-10 text-emerald-400" />
+                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+                  <Check className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <h1 className="font-display font-bold text-2xl text-white mb-2">
+                <h1 className="mb-2 text-2xl font-bold tracking-[-0.02em]">
                   Compte créé ! Vérifiez votre adresse e-mail.
                 </h1>
-                <p className="text-white/60 text-sm mb-6">
+                <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
                   Un lien de confirmation a été envoyé à{" "}
-                  <span className="text-white font-semibold">
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
                     {successEmail}
                   </span>
                   .
@@ -193,32 +211,37 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={handleResend}
-                  className="text-indigo-300 hover:text-indigo-200 text-sm font-semibold"
+                  className="text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400"
                 >
                   Pas reçu ? Renvoyer l'e-mail
                 </button>
                 {confirmationUrl && (
-                  <div className="mt-5 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-left">
-                    <p className="text-amber-100 text-sm font-semibold">
+                  <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left dark:border-amber-500/30 dark:bg-amber-500/10">
+                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
                       Mode local Docker : SMTP n'est pas configuré.
                     </p>
-                    <p className="text-white/60 text-xs mt-1">
+                    <p className="mt-1 text-xs text-amber-700/80 dark:text-amber-300/70">
                       Cliquez ici pour confirmer ce compte pendant le
                       développement.
                     </p>
                     <a
                       href={confirmationUrl}
-                      className="mt-3 inline-flex text-amber-200 hover:text-amber-100 text-sm font-semibold underline"
+                      className="mt-3 inline-flex text-sm font-semibold text-amber-800 underline underline-offset-4 hover:text-amber-900 dark:text-amber-200"
                     >
                       Confirmer mon compte localement
                     </a>
                   </div>
                 )}
                 {resendStatus && (
-                  <p className="text-white/50 text-xs mt-3">{resendStatus}</p>
+                  <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+                    {resendStatus}
+                  </p>
                 )}
                 <div className="mt-6">
-                  <Link to="/login" className="btn-primary inline-flex">
+                  <Link
+                    to="/login"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)] transition hover:bg-blue-700"
+                  >
                     Se connecter
                   </Link>
                 </div>
@@ -226,36 +249,36 @@ export default function Register() {
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                 <div className="text-center">
-                  <h1 className="font-display font-bold text-3xl text-white mb-2">
+                  <h1 className="mb-2 text-3xl font-bold tracking-[-0.02em]">
                     Créez votre compte
                   </h1>
-                  <p className="text-white/60">
+                  <p className="text-[15px] text-zinc-500 dark:text-zinc-400">
                     Choisissez un rôle pour afficher le formulaire.
                   </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-5">
+                <div className="grid gap-5 md:grid-cols-2">
                   <button
                     type="button"
                     onClick={() => handleRoleSelect(ROLE_ETUDIANT)}
-                    className={`glass border rounded-2xl p-6 text-left transition-all transform will-change-auto hover:scale-[1.02] ${
+                    className={`relative rounded-2xl border bg-white p-6 text-left transition-all hover:-translate-y-0.5 dark:bg-zinc-900 ${
                       role === ROLE_ETUDIANT
-                        ? "border-cyan-400/70 shadow-[0_0_30px_rgba(34,211,238,0.18)] scale-105 ring-2 ring-cyan-400/30"
-                        : "border-white/15 opacity-90 hover:opacity-100"
-                    } relative`}
+                        ? "border-blue-500 shadow-[0_16px_40px_-20px_rgba(37,99,235,0.45)] ring-4 ring-blue-500/10"
+                        : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600"
+                    }`}
                   >
-                    <div className="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center mb-4">
-                      <GraduationCap className="w-6 h-6 text-cyan-300" />
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
+                      <GraduationCap className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h2 className="font-display font-bold text-lg text-white">
+                    <h2 className="text-lg font-bold tracking-[-0.01em]">
                       Je suis un étudiant
                     </h2>
-                    <p className="text-white/60 text-sm">
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
                       Je cherche un logement.
                     </p>
                     {role === ROLE_ETUDIANT && (
-                      <span className="absolute -top-2 -right-2 bg-emerald-500/20 text-emerald-400 rounded-full p-2">
-                        <Check className="w-4 h-4" />
+                      <span className="absolute -right-2 -top-2 rounded-full bg-blue-600 p-2 text-white shadow-md">
+                        <Check className="h-4 w-4" />
                       </span>
                     )}
                   </button>
@@ -263,24 +286,24 @@ export default function Register() {
                   <button
                     type="button"
                     onClick={() => handleRoleSelect(ROLE_PROPRIETAIRE)}
-                    className={`glass border rounded-2xl p-6 text-left transition-all transform will-change-auto hover:scale-[1.02] ${
+                    className={`relative rounded-2xl border bg-white p-6 text-left transition-all hover:-translate-y-0.5 dark:bg-zinc-900 ${
                       role === ROLE_PROPRIETAIRE
-                        ? "border-cyan-400/70 shadow-[0_0_30px_rgba(34,211,238,0.18)] scale-105 ring-2 ring-cyan-400/30"
-                        : "border-white/15 opacity-90 hover:opacity-100"
-                    } relative`}
+                        ? "border-blue-500 shadow-[0_16px_40px_-20px_rgba(37,99,235,0.45)] ring-4 ring-blue-500/10"
+                        : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-700 dark:hover:border-zinc-600"
+                    }`}
                   >
-                    <div className="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center mb-4">
-                      <Building2 className="w-6 h-6 text-cyan-300" />
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
+                      <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h2 className="font-display font-bold text-lg text-white">
+                    <h2 className="text-lg font-bold tracking-[-0.01em]">
                       Je suis un propriétaire
                     </h2>
-                    <p className="text-white/60 text-sm">
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
                       Je propose un logement.
                     </p>
                     {role === ROLE_PROPRIETAIRE && (
-                      <span className="absolute -top-2 -right-2 bg-emerald-500/20 text-emerald-400 rounded-full p-2">
-                        <Check className="w-4 h-4" />
+                      <span className="absolute -right-2 -top-2 rounded-full bg-blue-600 p-2 text-white shadow-md">
+                        <Check className="h-4 w-4" />
                       </span>
                     )}
                   </button>
@@ -289,16 +312,16 @@ export default function Register() {
                 <div
                   className={`transition-all duration-500 ${role ? "opacity-100 max-h-[2000px]" : "opacity-0 max-h-0 overflow-hidden"}`}
                 >
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <input
                         type="text"
                         placeholder="Prénom"
-                        className="input-field"
+                        className={FIELD}
                         {...register("prenom", { required: "Prénom requis" })}
                       />
                       {errors.prenom && (
-                        <p className="text-red-400 text-xs mt-1">
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                           {errors.prenom.message}
                         </p>
                       )}
@@ -307,11 +330,11 @@ export default function Register() {
                       <input
                         type="text"
                         placeholder="Nom"
-                        className="input-field"
+                        className={FIELD}
                         {...register("nom", { required: "Nom requis" })}
                       />
                       {errors.nom && (
-                        <p className="text-red-400 text-xs mt-1">
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                           {errors.nom.message}
                         </p>
                       )}
@@ -322,7 +345,7 @@ export default function Register() {
                     <input
                       type="email"
                       placeholder="Adresse e-mail"
-                      className="input-field"
+                      className={FIELD}
                       {...register("email", {
                         required: "Adresse e-mail requise",
                         pattern: {
@@ -332,7 +355,7 @@ export default function Register() {
                       })}
                     />
                     {errors.email && (
-                      <p className="text-red-400 text-xs mt-1">
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                         {errors.email.message}
                       </p>
                     )}
@@ -346,7 +369,7 @@ export default function Register() {
                           ? "Numéro de téléphone"
                           : "Numéro de téléphone (optionnel)"
                       }
-                      className="input-field"
+                      className={FIELD}
                       {...register("telephone", {
                         validate: (value) =>
                           role !== ROLE_PROPRIETAIRE ||
@@ -355,18 +378,18 @@ export default function Register() {
                       })}
                     />
                     {errors.telephone && (
-                      <p className="text-red-400 text-xs mt-1">
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                         {errors.telephone.message}
                       </p>
                     )}
                   </div>
 
-                  <div className="mt-4 grid md:grid-cols-2 gap-4">
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
                         placeholder="Mot de passe (min. 8 caractères)"
-                        className="input-field pr-12"
+                        className={`${FIELD} pr-12`}
                         {...register("motDePasse", {
                           required: "Mot de passe requis",
                           minLength: {
@@ -378,16 +401,17 @@ export default function Register() {
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
+                        className="absolute right-3 top-[22px] -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-600 dark:hover:text-zinc-300"
+                        aria-label="Afficher / masquer le mot de passe"
                       >
                         {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
+                          <EyeOff className="h-4 w-4" />
                         ) : (
-                          <Eye className="w-4 h-4" />
+                          <Eye className="h-4 w-4" />
                         )}
                       </button>
                       {errors.motDePasse && (
-                        <p className="text-red-400 text-xs mt-1">
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                           {errors.motDePasse.message}
                         </p>
                       )}
@@ -396,7 +420,7 @@ export default function Register() {
                       <input
                         type={showConfirm ? "text" : "password"}
                         placeholder="Confirmer le mot de passe"
-                        className="input-field pr-12"
+                        className={`${FIELD} pr-12`}
                         {...register("confirmMotDePasse", {
                           required: "Confirmation requise",
                           validate: (value) =>
@@ -407,16 +431,17 @@ export default function Register() {
                       <button
                         type="button"
                         onClick={() => setShowConfirm((prev) => !prev)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
+                        className="absolute right-3 top-[22px] -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-600 dark:hover:text-zinc-300"
+                        aria-label="Afficher / masquer la confirmation"
                       >
                         {showConfirm ? (
-                          <EyeOff className="w-4 h-4" />
+                          <EyeOff className="h-4 w-4" />
                         ) : (
-                          <Eye className="w-4 h-4" />
+                          <Eye className="h-4 w-4" />
                         )}
                       </button>
                       {errors.confirmMotDePasse && (
-                        <p className="text-red-400 text-xs mt-1">
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                           {errors.confirmMotDePasse.message}
                         </p>
                       )}
@@ -428,19 +453,19 @@ export default function Register() {
                       <input
                         type="text"
                         placeholder="Numéro CIN"
-                        className="input-field"
+                        className={FIELD}
                         {...register("numeroCin", {
                           required: "Numéro CIN requis",
                         })}
                       />
                       {errors.numeroCin && (
-                        <p className="text-red-400 text-xs mt-1">
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                           {errors.numeroCin.message}
                         </p>
                       )}
 
                       <div
-                        className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all ${dragging ? "border-cyan-400 bg-cyan-500/10" : "border-white/20 hover:border-white/40"}`}
+                        className={`rounded-2xl border-2 border-dashed p-6 text-center transition-all ${dragging ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10" : "border-zinc-300 hover:border-zinc-400 dark:border-zinc-600 dark:hover:border-zinc-500"}`}
                         onDragOver={(e) => {
                           e.preventDefault();
                           setDragging(true);
@@ -453,13 +478,13 @@ export default function Register() {
                           if (file) handleCinFile(file);
                         }}
                       >
-                        <div className="flex justify-center gap-3 mb-3">
-                          <Upload className="w-8 h-8 text-cyan-300" />
+                        <div className="mb-3 flex justify-center gap-3">
+                          <Upload className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <p className="text-white/60 text-sm mb-3">
+                        <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
                           Glissez votre photo CIN ici ou
                         </p>
-                        <label className="cursor-pointer text-cyan-300 hover:text-cyan-200 text-sm font-medium">
+                        <label className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">
                           <span>Parcourir les fichiers</span>
                           <input
                             type="file"
@@ -471,26 +496,26 @@ export default function Register() {
                             }}
                           />
                         </label>
-                        <p className="text-white/30 text-xs mt-2">
+                        <p className="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
                           Votre CIN sera vérifiée sous 24 h par notre équipe.
                         </p>
                       </div>
                       {cinFileError && (
-                        <p className="text-red-400 text-xs mt-1">
+                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                           {cinFileError}
                         </p>
                       )}
 
                       {cinPreview && (
-                        <div className="mt-4 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <div className="mt-4 flex items-center gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
                           <img
                             src={cinPreview}
                             alt="Aperçu CIN"
-                            className="h-20 w-28 object-cover rounded-xl"
+                            className="h-20 w-28 rounded-xl object-cover"
                           />
-                          <div className="flex-1 text-white/70 text-sm">
+                          <div className="flex-1 text-sm text-zinc-700 dark:text-zinc-300">
                             <p className="font-semibold">Fichier chargé</p>
-                            <p className="text-xs text-white/40 truncate max-w-[260px]">
+                            <p className="max-w-[260px] truncate text-xs text-zinc-400 dark:text-zinc-500">
                               {cinFile?.name}
                             </p>
                           </div>
@@ -501,18 +526,18 @@ export default function Register() {
                                 setCinFile(null);
                                 setCinPreview("");
                               }}
-                              className="text-sm text-indigo-300 hover:text-indigo-200 font-medium"
+                              className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
                             >
                               Supprimer
                             </button>
-                            <span className="text-emerald-400 text-xs">✓</span>
+                            <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                           </div>
                         </div>
                       )}
 
-                      <div className="flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl p-3">
-                        <Shield className="w-4 h-4 text-cyan-300 flex-shrink-0 mt-0.5" />
-                        <p className="text-white/60 text-xs">
+                      <div className="flex items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800">
+                        <Shield className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400">
                           3 signalements confirmés déclenchent une suspension
                           automatique.
                         </p>
@@ -522,7 +547,7 @@ export default function Register() {
                 </div>
 
                 {submitError && (
-                  <p className="text-red-400 text-sm text-center">
+                  <p className="text-center text-sm text-red-600 dark:text-red-400">
                     {submitError}
                   </p>
                 )}
@@ -530,16 +555,16 @@ export default function Register() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="btn-primary w-full justify-center"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)] transition hover:bg-blue-700 disabled:opacity-60"
                 >
                   {isSubmitting ? "Création du compte..." : "Créer mon compte"}
                 </button>
 
-                <p className="text-center text-white/50 text-sm">
+                <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
                   Déjà inscrit ?{" "}
                   <Link
                     to="/login"
-                    className="text-indigo-300 hover:text-indigo-200 font-semibold"
+                    className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400"
                   >
                     Se connecter
                   </Link>

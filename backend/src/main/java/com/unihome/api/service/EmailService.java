@@ -52,6 +52,62 @@ public class EmailService {
         sendIfConfigured(message, "password reset email");
     }
 
+    /**
+     * Notification au proprietaire apres la decision de verification automatique
+     * (IA) : VALIDEE, EN_ATTENTE ou REJETEE.
+     */
+    public void sendAnnonceDecisionEmail(String to, String titreProp, com.unihome.api.entity.StatutAnnonceEnum statut,
+                                         Short score, String messageIa) {
+        String subject;
+        String intro;
+        switch (statut) {
+            case VALIDEE -> {
+                subject = "Votre annonce est publiée — UniHome";
+                intro = "Bonne nouvelle ! Votre annonce \"" + titreProp + "\" a passé la vérification automatique"
+                        + " et est maintenant visible par les étudiants.";
+            }
+            case REJETEE -> {
+                subject = "Votre annonce n'a pas été validée — UniHome";
+                intro = "Votre annonce \"" + titreProp + "\" n'a pas passé la vérification automatique.\n"
+                        + "Vous pouvez la modifier depuis la page \"Mes annonces\" puis la resoumettre.";
+            }
+            default -> {
+                subject = "Votre annonce est en cours de vérification — UniHome";
+                intro = "Votre annonce \"" + titreProp + "\" nécessite une vérification complémentaire par notre équipe.\n"
+                        + "Elle sera publiée dès qu'elle aura été validée.";
+            }
+        }
+
+        StringBuilder body = new StringBuilder("Bonjour,\n\n").append(intro).append("\n\n");
+        if (score != null) {
+            body.append("Score de confiance : ").append(score).append("/100\n");
+        }
+        if (messageIa != null && !messageIa.isBlank()) {
+            body.append("Détail : ").append(messageIa).append("\n");
+        }
+        body.append("\nL'équipe UniHome");
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailFrom);
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(body.toString());
+        sendIfConfigured(message, "annonce decision email");
+    }
+
+    /** Notification au proprietaire quand son annonce expire (90 jours) et est archivee. */
+    public void sendAnnonceExpiredEmail(String to, String titreProp) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailFrom);
+        message.setTo(to);
+        message.setSubject("Votre annonce a expiré — UniHome");
+        message.setText("Bonjour,\n\nVotre annonce \"" + titreProp + "\" a atteint sa durée de publication de 90 jours"
+                + " et a été archivée automatiquement.\n\n"
+                + "Si le logement est toujours disponible, vous pouvez la désarchiver depuis la page \"Mes annonces\""
+                + " pour la republier pour 90 jours.\n\nL'équipe UniHome");
+        sendIfConfigured(message, "annonce expired email");
+    }
+
     public void sendAnnonceRejectionEmail(String to, String titreProp, String raison) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailFrom);
@@ -86,15 +142,27 @@ public class EmailService {
         sendIfConfigured(message, "annonce suspension email");
     }
 
-    public void sendAccountSuspensionEmail(String to, String nomPrenom) {
+    public void sendAccountSuspensionEmail(String to, String nomPrenom, String raison) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailFrom);
         message.setTo(to);
         message.setSubject("Votre compte a été suspendu — UniHome");
         message.setText("Bonjour " + nomPrenom + ",\n\nVotre compte UniHome a été suspendu par notre équipe.\n"
+                + (raison != null && !raison.isBlank() ? "Motif : " + raison + "\n" : "")
                 + "Toutes vos annonces actives ont également été suspendues.\n\n"
-                + "Pour plus d'informations, contactez-nous.\n\nL'équipe UniHome");
+                + "Si vous pensez qu'il s'agit d'une erreur, vous pouvez faire appel depuis la page de connexion UniHome.\n\nL'équipe UniHome");
         sendIfConfigured(message, "account suspension email");
+    }
+
+    public void sendAccountReactivationEmail(String to, String nomPrenom) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailFrom);
+        message.setTo(to);
+        message.setSubject("Votre compte a été réactivé — UniHome");
+        message.setText("Bonjour " + nomPrenom + ",\n\nBonne nouvelle : votre compte UniHome a été réactivé par notre équipe.\n"
+                + "Vous pouvez dès maintenant vous reconnecter.\n\n"
+                + "Note : vos annonces suspendues ne sont pas réactivées automatiquement. Elles seront réexaminées par notre équipe.\n\nL'équipe UniHome");
+        sendIfConfigured(message, "account reactivation email");
     }
 
     private void sendIfConfigured(SimpleMailMessage message, String purpose) {

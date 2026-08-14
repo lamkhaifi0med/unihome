@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,4 +37,8 @@ public interface AnnonceRepository extends JpaRepository<Annonce, UUID>, JpaSpec
 
     Optional<Annonce> findFirstByLogementIdAndStatutInOrderByDatePublicationDesc(UUID logementId,
                                                                                 List<StatutAnnonceEnum> statuts);
+
+    List<Annonce> findByStatutInAndDateExpirationBefore(List<StatutAnnonceEnum> statuts, LocalDateTime limite);
+
+    long countByLogementId(UUID logementId);
 }
